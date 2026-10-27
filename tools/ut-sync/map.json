@@ -36,6 +36,10 @@
     [
      "최대 17,005원 할인",
      "최대 10,000원 할인"
+    ],
+    [
+     "무신사머니 10% 적립 · ",
+     ""
     ]
    ],
    "spots": [
@@ -74,14 +78,11 @@
    ]
   },
   {
-   "board": "M1_SelfPopup_Plcc_Flat",
+   "board": "M1_SelfPopup_Flat",
    "ut": [
     "a-list"
    ],
    "overlay": true,
-   "remove": [
-    "무신사 현대카드"
-   ],
    "replace": [
     [
      "6,540원",
@@ -99,15 +100,6 @@
     }
    ],
    "spots": [
-    {
-     "id": "ms-info",
-     "svg_in": "무신사머니 포인트 10% 적립",
-     "wrap": "display: inline-block; padding: 10px; margin: -10px -10px -10px -8px; cursor: pointer"
-    },
-    {
-     "id": "r-msamsung",
-     "text": "무신사 삼성카드"
-    },
     {
      "id": "r-samsung",
      "text": "삼성카드"
@@ -144,17 +136,11 @@
    }
   },
   {
-   "board": "Idea7_SelfWideCard_Label",
+   "board": "Idea7_SelfWideCard_Label-2da4",
    "ut": [
     "b-wide"
    ],
    "overlay": true,
-   "remove": [
-    {
-     "text": "무신사 현대카드",
-     "up": 2
-    }
-   ],
    "replace": [
     [
      "6,540원",
@@ -175,22 +161,7 @@
      "before": "페이코 × 포인트"
     }
    ],
-   "regex": [
-    [
-     "무신사머니 포인트 10%(<span data-hs=\"ms-info\".*?</svg></span>)",
-     "무신사머니 포인트 <span style=\"white-space: nowrap\">10%\\1</span>"
-    ]
-   ],
    "spots": [
-    {
-     "id": "ms-info",
-     "svg_in": "무신사머니 포인트 10%",
-     "wrap": "display: inline-block; padding: 10px; margin: -10px -10px -10px -8px; cursor: pointer"
-    },
-    {
-     "id": "r-msamsung",
-     "text": "무신사 삼성카드"
-    },
     {
      "id": "r-samsung",
      "text": "삼성카드"
