@@ -278,7 +278,8 @@ async function sbLoad(){const tok=sbToken();if(!tok){sbErr='';sbRows=[];return;}
   catch(e){sbErr='Supabase에서 결과를 못 읽었어요 ('+(e.message||e)+'). 읽기 토큰이 맞는지 확인해 주세요.';sbRows=[];}
   mergeSessions();}
 let S1=[],S2=[];
-function mergeSessions(){sessions=sbRows.concat(S1,S2);renderBar();if(tab==='results'&&!res.aiBusy)renderResults();}
+let oldCount=0;
+function mergeSessions(){const mv=(study&&study.missionVersion)||1;const all=sbRows.concat(S1,S2);const cur=all.filter(s=>(s.mission||1)===mv);oldCount=all.length-cur.length;sessions=res.includeOld?all:cur;renderBar();if(tab==='results'&&!res.aiBusy)renderResults();}
 const noSave=()=>false;
 
 let study=null,sessions=[];
@@ -594,7 +595,7 @@ async function submit(){
   if(shouldSave){
     const body={variant:run.vid,role:run.role,gender:run.gender||null,age:run.age||null,outcome:run.end?'end':'giveup',endLabel:run.end?run.end.label:null,ok:run.end?run.end.ok:false,endBenefit:run.end?!!run.end.benefit:false,tPick:run.tPick??null,cmpOrder:run.cmp||null,pickFrom:run.pickFrom||null,payCancels:run.payCancels||0,picks:run.picks||[],scrollMax:run.scrollMax||{},visits:run.visits.slice(0,80),
       path:run.path.slice(0,60),taps:run.taps,tTotal:run.tTotal,cancels:run.cancels,stuck:run.stuck,answers:run.answers,
-      mode:isEditor?'facilitated':'self',studyAt:study.updatedAt||'',viewport:Math.round(window.innerWidth),createdAt:new Date().toISOString()};
+      mode:isEditor?'facilitated':'self',mission:study.missionVersion||1,studyAt:study.updatedAt||'',viewport:Math.round(window.innerWidth),createdAt:new Date().toISOString()};
     try{if(SB.url){await sbInsert(body);}else{const ref=isEditor?db.collection('sessions').doc():uid?db.doc('sessions/'+uid):db.collection('responses').doc();await ref.set(body);}}
     catch(err){if(SB.url){saveErr='응답을 보내지 못했어요. 인터넷 연결을 확인하고 다시 눌러주세요. ('+(err.message||err)+')';run.phase=study.questions.length?'q':'done';render();return;}saveErr=err&&err.code==='invalid_argument'?'응답을 저장할 권한이 없어요. 링크를 보낸 분께 참여 권한(Contributor)을 요청해 주세요.':'응답을 보내지 못했어요. 잠시 후 다시 눌러주세요.';run.phase=study.questions.length?'q':'done';render();return;}
     if(!isEditor){already=true;try{localStorage.setItem(DONE_KEY,'1');}catch(e){}}
@@ -653,6 +654,7 @@ function renderResults(){
   if(live.length>=2){const sorted=live.slice().sort((a,b)=>(b.ok-a.ok)||((a.t??1e12)-(b.t??1e12)));if(sorted[0].ok!==sorted[1].ok||sorted[0].t!==sorted[1].t)win=sorted[0].v.id;}
   const small=live.some(s=>s.n<5)||live.length<2;
   const total=sessions.length;
+  const oldNote=oldCount?`<div class="banner" style="display:flex;justify-content:space-between;gap:12px;align-items:center"><span>미션을 바꾸기 전 응답 ${oldCount}건은 ${res.includeOld?'포함돼 있어요':'빼고 집계했어요'}</span><button class="btn sm soft" id="old-toggle">${res.includeOld?'빼고 보기':'포함해서 보기'}</button></div>`:'';
   const sbNote=SB.url?(sbToken()?(sbErr?`<div class="banner">${esc(sbErr)}</div>`:''):`<div class="banner">Supabase에 저장된 응답을 보려면 위 '읽기 토큰 입력'을 눌러 토큰을 넣어주세요.</div>`):'';
   if(!res.screen||!vs[res.v]||!scr(vs[res.v],res.screen)){res.v=Math.min(res.v,Math.max(0,vs.length-1));res.screen=vs[res.v]?.start||vs[res.v]?.screens[0]?.id||null;}
 
@@ -683,7 +685,7 @@ function renderResults(){
       return `<div><h3>${esc(v.id)} · ${esc(v.name)} <span class="sub">${l.length}명</span></h3><div class="bars">${opts.map((o,i)=>`<div class="br"><span class="l" title="${esc(o)}">${esc(o)}</span><div class="tr"><div class="fl" style="width:${c[i]/mx*100}%"></div></div><span class="v">${c[i]}</span></div>`).join('')}</div></div>`;}).join('')}</div>`;
   };
 
-  app.innerHTML=`<div class="rwrap gut"><div class="stack">${sbNote}
+  app.innerHTML=`<div class="rwrap gut"><div class="stack">${sbNote}${oldNote}
   <section class="card">
     <div class="card-h"><div><h2>한눈에 보기</h2><p class="sub">응답 ${total}건 · ${study.primary==='benefit'?'혜택 있는 수단으로 결제한 비율':'정답률'}이 높고, 같으면 더 빨리 끝낸 시안이 앞서요</p></div></div>
     ${total&&small?'<div class="banner">아직 참여자가 적어요. 시안마다 5명 이상 모이면 비교가 더 믿을 만해요.</div>':''}
@@ -718,6 +720,7 @@ function renderResults(){
   const hvb=$('#hm-v');if(hvb)hvb.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;res.v=+b.dataset.i;const v=vs[res.v];res.screen=v.start||v.screens[0]?.id;renderResults();});
   const hsb=$('#hm-s');if(hsb)hsb.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;res.screen=b.dataset.id;renderResults();});
   const aib=$('#ai');if(aib)aib.addEventListener('click',summarize);
+  const ot=$('#old-toggle');if(ot)ot.addEventListener('click',()=>{res.includeOld=!res.includeOld;mergeSessions();});
   scaleHs($('.hm'));initLottie($('.hm'));
   if(hs&&hs.html){const L=$('.hm .hs.top .sc-list');if(L&&L.firstElementChild){const c=L.firstElementChild;c.style.position='relative';sessions.filter(s=>s.variant===hv.id).forEach(s=>(s.taps||[]).forEach(t=>{if(t.s===hs.id&&t.l){const d=document.createElement('span');d.className='ldot'+(t.h?'':' miss');d.style.left=t.l[0]+'px';d.style.top=t.l[1]+'px';c.appendChild(d);}}));}}
 }
