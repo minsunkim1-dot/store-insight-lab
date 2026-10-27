@@ -1,13 +1,12 @@
 # 캔버스 → UT 화면 동기화
 
 - 원본: 결제수단별 혜택 와이어프레임 캔버스 (https://claude.ai/artifact/EnfY5dE6aUfQngLp1rQcXx)
-- 대상: 결제 수단 혜택 UT (https://claude.ai/artifact/Hy2hZkWpRrb3eD73cgUvjh), DB 문서 `config/study`
+- 대상: GitHub Pages UT (`ut-lab/studies/selfpos-benefit.json`) — 예전 claude.ai UT(DB `config/study`)는 더 이상 갱신하지 않음
 
 ## 쓰는 법 (Claude에게 "캔버스 반영해줘")
 1. 캔버스에서 map.json의 보드 파일(`project/<board>.dc.html`)을 읽어 `boards/`에 저장
-2. UT의 `config/study`를 읽어 저장
-3. `python3 sync.py boards <읽은 config> <out.json>` 실행 → 화면별 결과 보고
-4. 바뀐 화면을 확인(렌더·클릭 흐름)한 뒤 `config/study`에 out.json을 버전 고정해서 저장
+2. `python3 sync.py boards ../../ut-lab/studies/selfpos-benefit.json out.json` 실행 → 화면별 결과 보고
+3. 바뀐 화면을 확인(렌더·클릭 흐름)한 뒤 out.json을 `ut-lab/studies/selfpos-benefit.json`에 덮어쓰고 git push (Pages 재배포 1~2분)
 
 ## 연결된 화면
 | 캔버스 보드 | UT 화면 |
@@ -29,3 +28,7 @@
 - 전체: "결제 혜택" → "결제혜택"
 - 누르는 영역(data-hs), 모션(lottie), 결제 금액 표시(data-amount)는 UT 것 유지
 - 캔버스 이미지 id → UT 이미지 id 표(blobs). 표에 없는 이미지가 나오면 그 화면은 그대로 두고 "복사할 이미지"로 알려줌
+
+- 이미지 경로: map.json의 `assets_dir`로 `/_blob/<id>` → `assets/<id>.<ext>` 변환
+- 스팟 지정: `text`(글자로 찾기) / `svg_in`(글자 요소 안의 svg 아이콘 감싸기) / `css`+`nth`(선택자)
+- `labels`: 보드 반영 시 함께 바꿀 결제수단 라벨

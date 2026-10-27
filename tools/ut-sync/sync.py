@@ -85,9 +85,13 @@ def build(entry, board_dir, cur_html, log):
         body = expand(body, render_vals(script))
     # blob 바꾸기
     missing = set()
+    ASSETS = M.get('assets_dir')
+    EXT = {os.path.splitext(f)[0]: os.path.splitext(f)[1] for f in os.listdir(os.path.join(HERE, ASSETS))} if ASSETS else {}
     def blob_rep(m):
         bid = m.group(1)
-        if bid in BLOB: return '/_blob/' + BLOB[bid]
+        if bid in BLOB:
+            uid = BLOB[bid]
+            return (ASSETS.split('/')[-1] + '/' + uid + EXT.get(uid, '')) if ASSETS else '/_blob/' + uid
         missing.add(bid); return m.group(0)
     if entry.get('lottie'):
         body = re.sub(r'(ref="\{\{ ?setBox ?\}\}"[^>]*?)url\(/_blob/[0-9a-f]{32}\)', r'\1', body)
@@ -115,6 +119,18 @@ def build(entry, board_dir, cur_html, log):
         a.extract(); b.insert_before(a)
     # 누르는 영역
     for sp in entry.get('spots', []):
+        if sp.get('css'):
+            found = soup.select(sp['css'])
+            el = found[sp.get('nth', 0)] if len(found) > sp.get('nth', 0) else None
+            if el is None: log.append(f"  누르는 영역 {sp['id']} (css {sp['css']}) 못 찾음"); continue
+            el['data-hs'] = sp['id']; continue
+        if sp.get('svg_in'):
+            host = find_text_el(soup, sp['svg_in'])
+            svg = host.find('svg') if host is not None else None
+            if svg is None and host is not None and host.parent is not None: svg = host.parent.find('svg')
+            if svg is None: log.append(f"  누르는 영역 {sp['id']} (svg in '{sp['svg_in']}') 못 찾음"); continue
+            w = soup.new_tag('span'); w['data-hs'] = sp['id']; w['style'] = sp.get('wrap', 'display: inline-block; padding: 8px; margin: -8px; cursor: pointer')
+            svg.wrap(w); continue
         within = None
         if sp.get('within'):
             w = find_text_el(soup, sp['within'])
@@ -177,6 +193,9 @@ def main():
         if not bad:
             for i in ids:
                 if S[i]['html'] != html: S[i]['html'] = html; changed.append(i)
+                for sp in S[i].get('spots', []):
+                    lab = entry.get('labels', {}).get(sp['id'])
+                    if lab and sp.get('pick') and sp['pick'].get('label') != lab: sp['pick']['label'] = lab; changed.append(i + ':' + sp['id'])
     import time
     if changed: st['updatedAt'] = time.time() * 1000
     json.dump(st, open(outp, 'w'), ensure_ascii=False)

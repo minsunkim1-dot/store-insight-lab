@@ -66,6 +66,10 @@
      "id": "staff",
      "text": "직원호출",
      "up": 0
+    },
+    {
+     "id": "back",
+     "css": "a[href=\"Self_Cart.dc.html\"]"
     }
    ]
   },
@@ -90,16 +94,15 @@
    ],
    "order": [
     {
-     "move": "행사 매장 첫 결제 · 즉시할인",
+     "move": "매장 첫 결제 · 즉시할인",
      "before": "페이코 × 포인트"
     }
    ],
    "spots": [
     {
      "id": "ms-info",
-     "within": "무신사 삼성카드",
-     "text": "i",
-     "wrap": "display: inline-flex; padding: 10px; margin: -10px -10px -10px -6px; vertical-align: middle; cursor: pointer"
+     "svg_in": "무신사머니 포인트 10% 적립",
+     "wrap": "display: inline-block; padding: 10px; margin: -10px -10px -10px -8px; cursor: pointer"
     },
     {
      "id": "r-msamsung",
@@ -115,7 +118,7 @@
     },
     {
      "id": "r-kakao1",
-     "text": "행사 매장 첫 결제 · 즉시할인"
+     "text": "매장 첫 결제 · 즉시할인"
     },
     {
      "id": "r-kakao2",
@@ -123,19 +126,22 @@
     },
     {
      "id": "up",
-     "text": "↑",
-     "up": 0
+     "css": "div[style*=\"width: 64px; flex-shrink: 0\"] > span",
+     "nth": 0
     },
     {
      "id": "down",
-     "text": "↓",
-     "up": 0
+     "css": "div[style*=\"width: 64px; flex-shrink: 0\"] > span",
+     "nth": 1
     },
     {
      "id": "close",
      "text": "닫기"
     }
-   ]
+   ],
+   "labels": {
+    "r-kakao1": "카카오페이 (매장 첫 결제)"
+   }
   },
   {
    "board": "Idea7_SelfWideCard_Label",
@@ -165,22 +171,21 @@
    ],
    "order": [
     {
-     "move": "행사 매장 첫 결제 · 즉시할인",
+     "move": "매장 첫 결제 · 즉시할인",
      "before": "페이코 × 포인트"
     }
    ],
    "regex": [
     [
-     "무신사머니 포인트 10%(<span data-hs=\"ms-info\".*?</span></span>)",
+     "무신사머니 포인트 10%(<span data-hs=\"ms-info\".*?</svg></span>)",
      "무신사머니 포인트 <span style=\"white-space: nowrap\">10%\\1</span>"
     ]
    ],
    "spots": [
     {
      "id": "ms-info",
-     "within": "무신사 삼성카드",
-     "text": "i",
-     "wrap": "display: inline-flex; padding: 10px; margin: -10px -10px -10px -6px; vertical-align: middle; cursor: pointer"
+     "svg_in": "무신사머니 포인트 10%",
+     "wrap": "display: inline-block; padding: 10px; margin: -10px -10px -10px -8px; cursor: pointer"
     },
     {
      "id": "r-msamsung",
@@ -196,7 +201,7 @@
     },
     {
      "id": "r-kakao1",
-     "text": "행사 매장 첫 결제 · 즉시할인"
+     "text": "매장 첫 결제 · 즉시할인"
     },
     {
      "id": "r-kakao2",
@@ -204,19 +209,22 @@
     },
     {
      "id": "up",
-     "text": "↑",
-     "up": 0
+     "css": "div[style*=\"width: 64px; flex-shrink: 0\"] > span",
+     "nth": 0
     },
     {
      "id": "down",
-     "text": "↓",
-     "up": 0
+     "css": "div[style*=\"width: 64px; flex-shrink: 0\"] > span",
+     "nth": 1
     },
     {
      "id": "close",
      "text": "닫기"
     }
-   ]
+   ],
+   "labels": {
+    "r-kakao1": "카카오페이 (매장 첫 결제)"
+   }
   },
   {
    "board": "Self_EasyPay",
@@ -341,5 +349,6 @@
     ]
    ]
   }
- ]
+ ],
+ "assets_dir": "../../ut-lab/assets"
 }
