@@ -1,0 +1,345 @@
+{
+ "blobs": {
+  "fe958b8940b9a6f737618f6c10bef4fd": "121d75e9e4530a8ed6be39cbf002181c",
+  "b9fa858f84339ccd3283bbcafcfd6eaf": "6a5e2239f3f1ddd983088e969bdce80c",
+  "9f710dd63923989e63dd23efefea4f45": "8630f02088fde482ed57f6eac2cd8681",
+  "969cae68b5a3f90031e621516c5d7ca8": "300a12bc0f421227ee214914d64a6d47",
+  "ba2caf806b35ec7f9bfa76e9e09b203d": "013ccda6b33f2e76ac53aef96ef20df2",
+  "a783580a97aae0c7e03168033f24bab5": "f8e36f8d073e7393e4ae4bb8dc19d5cf",
+  "91ae77746d7a8f7c6660456e433d7774": "d610c40bb3edc03d0e2f13e40759ca02",
+  "391745ef159affbfc53cf0a8d87fc72b": "35d431627ebbdac1d01caafb23ed1b0a",
+  "bc1db36f435fc18dbafd567e6ff5308a": "75a1902fd5c92bcc42355328c839b2d6",
+  "36f3cd27e7209d1306695ebd707dff54": "2d2bfd81bbbc20c604bd6922c646e79c"
+ },
+ "replace_all": [
+  [
+   "결제 혜택",
+   "결제혜택"
+  ]
+ ],
+ "screens": [
+  {
+   "board": "Self_Method",
+   "ut": [
+    "a-method",
+    "b-method"
+   ],
+   "replace": [
+    [
+     ">6개<",
+     ">4개<"
+    ],
+    [
+     "340,100원",
+     "196,210원"
+    ],
+    [
+     "최대 17,005원 할인",
+     "최대 10,000원 할인"
+    ]
+   ],
+   "spots": [
+    {
+     "id": "pill",
+     "text": "결제혜택 ·"
+    },
+    {
+     "id": "card1",
+     "text": "신용·체크카드",
+     "up": 2
+    },
+    {
+     "id": "card2",
+     "text": "삼성·애플페이",
+     "up": 2
+    },
+    {
+     "id": "card3",
+     "text": "간편결제",
+     "up": 2
+    },
+    {
+     "id": "more",
+     "text": "더보기"
+    },
+    {
+     "id": "staff",
+     "text": "직원호출",
+     "up": 0
+    }
+   ]
+  },
+  {
+   "board": "M1_SelfPopup_Plcc_Flat",
+   "ut": [
+    "a-list"
+   ],
+   "overlay": true,
+   "remove": [
+    "무신사 현대카드"
+   ],
+   "replace": [
+    [
+     "6,540원",
+     "3,920원"
+    ],
+    [
+     "-17,005원",
+     "-9,810원"
+    ]
+   ],
+   "order": [
+    {
+     "move": "행사 매장 첫 결제 · 즉시할인",
+     "before": "페이코 × 포인트"
+    }
+   ],
+   "spots": [
+    {
+     "id": "ms-info",
+     "within": "무신사 삼성카드",
+     "text": "i",
+     "wrap": "display: inline-flex; padding: 10px; margin: -10px -10px -10px -6px; vertical-align: middle; cursor: pointer"
+    },
+    {
+     "id": "r-msamsung",
+     "text": "무신사 삼성카드"
+    },
+    {
+     "id": "r-samsung",
+     "text": "삼성카드"
+    },
+    {
+     "id": "r-payco",
+     "text": "페이코 × 포인트"
+    },
+    {
+     "id": "r-kakao1",
+     "text": "행사 매장 첫 결제 · 즉시할인"
+    },
+    {
+     "id": "r-kakao2",
+     "text": "-8,000원"
+    },
+    {
+     "id": "up",
+     "text": "↑",
+     "up": 0
+    },
+    {
+     "id": "down",
+     "text": "↓",
+     "up": 0
+    },
+    {
+     "id": "close",
+     "text": "닫기"
+    }
+   ]
+  },
+  {
+   "board": "Idea7_SelfWideCard_Label",
+   "ut": [
+    "b-wide"
+   ],
+   "overlay": true,
+   "remove": [
+    {
+     "text": "무신사 현대카드",
+     "up": 2
+    }
+   ],
+   "replace": [
+    [
+     "6,540원",
+     "3,920원"
+    ],
+    [
+     "-17,005원",
+     "-9,810원"
+    ],
+    [
+     "<span style=\"font-size: 18px; font-weight: 500\">적립</span>",
+     "<span style=\"font-size: 18px; font-weight: 500\">예상 적립금</span>"
+    ]
+   ],
+   "order": [
+    {
+     "move": "행사 매장 첫 결제 · 즉시할인",
+     "before": "페이코 × 포인트"
+    }
+   ],
+   "regex": [
+    [
+     "무신사머니 포인트 10%(<span data-hs=\"ms-info\".*?</span></span>)",
+     "무신사머니 포인트 <span style=\"white-space: nowrap\">10%\\1</span>"
+    ]
+   ],
+   "spots": [
+    {
+     "id": "ms-info",
+     "within": "무신사 삼성카드",
+     "text": "i",
+     "wrap": "display: inline-flex; padding: 10px; margin: -10px -10px -10px -6px; vertical-align: middle; cursor: pointer"
+    },
+    {
+     "id": "r-msamsung",
+     "text": "무신사 삼성카드"
+    },
+    {
+     "id": "r-samsung",
+     "text": "삼성카드"
+    },
+    {
+     "id": "r-payco",
+     "text": "페이코 × 포인트"
+    },
+    {
+     "id": "r-kakao1",
+     "text": "행사 매장 첫 결제 · 즉시할인"
+    },
+    {
+     "id": "r-kakao2",
+     "text": "-8,000원"
+    },
+    {
+     "id": "up",
+     "text": "↑",
+     "up": 0
+    },
+    {
+     "id": "down",
+     "text": "↓",
+     "up": 0
+    },
+    {
+     "id": "close",
+     "text": "닫기"
+    }
+   ]
+  },
+  {
+   "board": "Self_EasyPay",
+   "ut": [
+    "a-easy",
+    "b-easy"
+   ],
+   "overlay": true,
+   "spots": [
+    {
+     "id": "info",
+     "text": "혜택 보기"
+    },
+    {
+     "id": "pick-kakao",
+     "text": "카카오페이",
+     "up": 1
+    },
+    {
+     "id": "pick-toss",
+     "text": "토스페이",
+     "up": 1
+    },
+    {
+     "id": "pick-payco",
+     "text": "페이코",
+     "up": 1
+    },
+    {
+     "id": "pick-zero",
+     "text": "제로페이",
+     "up": 1
+    },
+    {
+     "id": "pick-ali",
+     "text": "알리페이",
+     "up": 1
+    },
+    {
+     "id": "pick-wechat",
+     "text": "위챗페이",
+     "up": 1
+    },
+    {
+     "id": "ok",
+     "text": "확인"
+    }
+   ]
+  },
+  {
+   "board": "Self_Guide_CardPlcc",
+   "ut": [
+    "a-card-ms",
+    "b-card-ms"
+   ],
+   "overlay": true,
+   "lottie": true,
+   "spots": [
+    {
+     "id": "cancel",
+     "text": "취소"
+    }
+   ]
+  },
+  {
+   "board": "Self_Guide_CardLink",
+   "ut": [
+    "a-card-link",
+    "b-card-link"
+   ],
+   "overlay": true,
+   "lottie": true,
+   "spots": [
+    {
+     "id": "cancel",
+     "text": "취소"
+    }
+   ]
+  },
+  {
+   "board": "Self_Guide_Payco",
+   "ut": [
+    "a-scan-payco",
+    "b-scan-payco"
+   ],
+   "overlay": true,
+   "lottie": true,
+   "spots": [
+    {
+     "id": "cancel",
+     "text": "취소"
+    }
+   ]
+  },
+  {
+   "board": "Self_Guide_Kakao",
+   "ut": [
+    "a-scan-kakao",
+    "b-scan-kakao"
+   ],
+   "overlay": true,
+   "lottie": true,
+   "spots": [
+    {
+     "id": "cancel",
+     "text": "취소"
+    }
+   ]
+  },
+  {
+   "board": "Self_CompleteDialog",
+   "ut": [
+    "a-paid",
+    "b-paid"
+   ],
+   "overlay": true,
+   "amount": "196,210원",
+   "replace": [
+    [
+     "340,100원",
+     "196,210원"
+    ]
+   ]
+  }
+ ]
+}
