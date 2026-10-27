@@ -278,7 +278,8 @@ async function sbLoad(){const tok=sbToken();if(!tok){sbErr='';sbRows=[];return;}
   catch(e){sbErr='Supabase에서 결과를 못 읽었어요 ('+(e.message||e)+'). 읽기 토큰이 맞는지 확인해 주세요.';sbRows=[];}
   mergeSessions();}
 let S1=[],S2=[];
-let oldCount=0,repCount=0;
+let oldCount=0,repCount=0,vCounts=null;
+async function loadCounts(){if(!SB.url)return;try{const ctl=new AbortController();const t=setTimeout(()=>ctl.abort(),2500);const r=await fetch(SB.url+'/rest/v1/rpc/ut_variant_counts',{method:'POST',headers:sbHeaders(),signal:ctl.signal,body:JSON.stringify({p_study:SB.study,p_mission:(study&&study.missionVersion)||1})});clearTimeout(t);if(r.ok){const rows=await r.json();vCounts={};rows.forEach(x=>{vCounts[x.variant]=Number(x.n)||0;});}}catch(e){vCounts=null;}}
 function mergeSessions(){const mv=(study&&study.missionVersion)||1;const all=sbRows.concat(S1,S2);const cur=all.filter(s=>(s.mission||1)===mv);oldCount=all.length-cur.length;const base=res.includeOld?all:cur;repCount=base.filter(s=>s.repeat).length;sessions=res.includeRep?base:base.filter(s=>!s.repeat);renderBar();if(tab==='results'&&!res.aiBusy)renderResults();}
 const noSave=()=>false;
 
@@ -335,6 +336,7 @@ function pickVariant(){
   const vs=playable();
   if(isEditor&&pv.forced!=='auto'){const f=vs.find(v=>v.id===pv.forced);if(f)return f;}
   if(isEditor&&sessions.length){const n={};vs.forEach(v=>n[v.id]=0);sessions.forEach(s=>{if(n[s.variant]!=null)n[s.variant]++;});return vs.slice().sort((a,b)=>n[a.id]-n[b.id])[0];}
+  if(!isEditor&&vCounts){const n=vs.map(v=>vCounts[v.id]||0);const m=Math.min(...n);const c=vs.filter((v,i)=>n[i]===m);return c[Math.floor(Math.random()*c.length)];}
   if(uid)return vs[hash(uid)%vs.length];
   return vs[Math.floor(Math.random()*vs.length)];
 }
@@ -362,7 +364,7 @@ function setEs(){const es=app.querySelector('.estripw');document.documentElement
 function shell(inner){app.innerHTML=editorStrip()+inner;if(isEditor)bindStrip();setEs();}
 function renderRun(){
   if(!study||!playable().length){shell(`<div class="center gut"><div class="sheet"><span class="eyebrow">사용성 테스트</span><h1>아직 준비 중이에요</h1><p class="lead">곧 참여할 수 있어요. 링크를 보낸 분께 확인해 주세요.</p></div></div>`);return;}
-  if(!isEditor&&already&&!(run&&run.phase==='done')){const upd=doneAt!==String(study.updatedAt||'1');shell(`<div class="center gut"><div class="sheet" style="align-items:center;text-align:center"><div class="donemark">${CHECK}</div><h1>이미 참여하셨어요</h1>${upd?'<p class="lead">테스트 화면이 업데이트됐어요.<br>바뀐 화면으로 한 번 더 참여할 수 있어요.</p><button class="btn blue block" id="rejoin">다시 참여하기</button>':'<p class="lead">한 사람당 한 번만 참여할 수 있어요.<br>도와주셔서 고마워요.</p>'}</div></div>`);const rj=$('#rejoin');if(rj)rj.addEventListener('click',()=>{repeatFrom=doneAt||'1';already=false;run=null;render();});return;}
+  if(!isEditor&&already&&!(run&&run.phase==='done')){const upd=doneAt!==String(study.updatedAt||'1');shell(`<div class="center gut"><div class="sheet" style="align-items:center;text-align:center"><div class="donemark">${CHECK}</div><h1>이미 참여하셨어요</h1>${upd?'<p class="lead">테스트 화면이 업데이트됐어요.<br>바뀐 화면으로 한 번 더 참여할 수 있어요.</p><button class="btn blue block" id="rejoin">다시 참여하기</button>':'<p class="lead">한 사람당 한 번만 참여할 수 있어요.<br>도와주셔서 고마워요.</p>'}</div></div>`);const rj=$('#rejoin');if(rj)rj.addEventListener('click',async()=>{repeatFrom=doneAt||'1';already=false;run=null;await loadCounts();render();});return;}
   if(!run||!RV())newRun();
   ({start:pStart,task:pTask,q:pQuestion,done:pDone})[run.phase]();
 }
@@ -763,7 +765,7 @@ render();
   isEditor=!!sbToken();
   try{const r=await fetch('studies/'+SB.study+'.json',{cache:'no-store'});study=r.ok?await r.json():null;}catch(e){study=null;}
   try{doneAt=localStorage.getItem(DONE_KEY)||'';already=!!doneAt;}catch(e){}
-  if(isEditor)sbLoad();
+  if(isEditor)sbLoad();else await loadCounts();
   ready=true;render();
 })();
 })();
