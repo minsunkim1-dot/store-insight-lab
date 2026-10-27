@@ -318,7 +318,7 @@ function editorStrip(){
 function bindStrip(){
   $$('[data-pv]').forEach(b=>b.addEventListener('click',()=>{pv.forced=b.dataset.pv;run=null;render();}));
   const c=$('#pv-save');if(c)c.addEventListener('change',e=>{pv.save=e.target.checked;});
-  const r=$('#pv-reset');if(r)r.addEventListener('click',()=>{run=null;render();});
+  const r=$('#pv-reset');if(r)r.addEventListener('click',()=>{run=null;already=false;try{localStorage.removeItem(DONE_KEY);}catch(e){}render();});
   const t=$('#sb-test');if(t)t.addEventListener('click',async()=>{const m=$('#sb-msg');m.textContent='보내는 중…';m.style.color='';try{await sbInsert({test:true,at:new Date().toISOString()});m.textContent='✓ Supabase 저장 성공';m.style.color='var(--ok)';}catch(e){m.textContent='✗ 실패: '+(e.message||e);m.style.color='var(--bad)';}});
 }
 
@@ -752,7 +752,9 @@ ${study.focus?`핵심 화면(${study.focus.label}) 지표(scrolled=팝업에서 
 /* ════════════════ 시작 ════════════════ */
 render();
 (async()=>{
-  const adm=QS.get('admin');if(adm){try{localStorage.setItem('ut-sb-token',adm);}catch(e){}history.replaceState(null,'',location.pathname+(QS.get('study')?'?study='+SB.study:''));}
+  if(QS.get('reset')){try{localStorage.removeItem(DONE_KEY);}catch(e){}}
+  const adm=QS.get('admin');if(adm){try{localStorage.setItem('ut-sb-token',adm);}catch(e){}}
+  if(adm||QS.get('reset'))history.replaceState(null,'',location.pathname+(QS.get('study')?'?study='+SB.study:''));
   isEditor=!!sbToken();
   try{const r=await fetch('studies/'+SB.study+'.json',{cache:'no-store'});study=r.ok?await r.json():null;}catch(e){study=null;}
   try{already=localStorage.getItem(DONE_KEY)==='1';}catch(e){}
