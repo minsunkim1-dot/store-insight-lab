@@ -112,11 +112,11 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 @media (max-width:900px){.gwrap{grid-template-columns:1fr}}
 .gleft{position:sticky;top:calc(var(--eb,0px) + var(--es,0px) + 14px);display:flex;flex-direction:column;gap:10px;align-items:center}
 @media (max-width:900px){.gleft{position:static}}
-.gstep{align-self:stretch;display:flex;align-items:center;gap:14px;background:#15161A;color:#fff;border-radius:16px;padding:12px 16px 12px 14px;box-shadow:0 12px 30px -16px rgba(0,0,0,.5)}
-.gstep .gico{flex:none;width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.12);display:grid;place-items:center;color:#fff}
+.gstep{align-self:stretch;display:flex;align-items:center;gap:16px;background:#15161A;color:#fff;border-radius:20px;padding:14px 14px 14px 16px;box-shadow:0 20px 44px -14px rgba(0,0,0,.55)}
+.gstep .gico{flex:none;width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,.12);display:grid;place-items:center;color:#fff}
 .gstep.ok .gico{background:rgba(69,198,144,.18);color:#45C690}
-.gstep p{flex:1;min-width:0;font-size:13px;color:rgba(255,255,255,.7);line-height:1.4}
-.gstep p b{display:block;color:#fff;font-size:15px;font-weight:700;margin-bottom:1px}
+.gstep p{flex:1;min-width:0;font-size:14px;color:rgba(255,255,255,.72);line-height:1.45}
+.gstep p b{display:block;color:#fff;font-size:18px;font-weight:700;line-height:1.4;margin-bottom:2px}
 .gcard .qnav{display:flex;gap:8px}.gcard .qnav .btn.blue{flex:1}
 .gcard{background:var(--surface);border-radius:22px;padding:24px 22px;display:flex;flex-direction:column;gap:16px;box-shadow:0 1px 0 var(--line),0 24px 48px -32px rgba(0,0,0,.35)}
 .gcard h2{font-size:19px;font-weight:700;line-height:1.4}
@@ -607,7 +607,7 @@ function openLightbox(vid,sid){
   window.addEventListener('resize',()=>scaleHs(qin),{once:true});
 }
 const HAND='<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M9 11V5.5a1.5 1.5 0 013 0V10m0 0V4.5a1.5 1.5 0 013 0V10m0 0V6.5a1.5 1.5 0 013 0V14a7 7 0 01-7 7h-.6a6 6 0 01-4.6-2.2L3.6 15.4a1.6 1.6 0 012.4-2.1L9 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-const gstepHTML=(ok,title,sub)=>`<div class="gstep${ok?' ok':''}"><span class="gico" aria-hidden="true">${ok?CHECK.replace('width="30" height="30"','width="20" height="20"'):HAND}</span><p><b>${esc(title)}</b>${sub?esc(sub):''}</p></div>`;
+const gstepHTML=(ok,title,sub)=>`<div class="gstep${ok?' ok':''}"><span class="gico" aria-hidden="true">${ok?CHECK.replace('width="30" height="30"','width="24" height="24"'):HAND.replace('width="22" height="22"','width="24" height="24"')}</span><p><b>${esc(title)}</b>${sub?esc(sub):''}</p></div>`;
 function pGuide(){
   const v=RV();const G=study.guide||[];const g=G[run.gi];
   if(!g){run.phase=study.questions.filter(x=>!guidedIds().has(x.id)).length?'q':'done';run.qi=0;if(run.phase==='done')submit();else render();return;}
@@ -683,7 +683,7 @@ function pQuestion(){
   let leftStep='';
   if(q.type==='compare')leftStep=gstepHTML(true,'두 시안의 팝업이에요','눌러서 크게 볼 수 있어요');
   else if(q.show)leftStep=gstepHTML(true,'방금 본 화면이에요','눌러서 크게 볼 수 있어요');
-  else{const g=run.g&&Object.values(run.g).slice(-1)[0];const ls=(g&&scr(v,g.cur))||resolveShot(v,'@popup')||resolveShot(v,'@start');if(ls){shots=shotHTML(v,ls);leftStep=gstepHTML(true,'참고용 화면이에요','눌러서 크게 볼 수 있어요');}}
+  else{const g=run.g&&Object.values(run.g).slice(-1)[0];const ls=resolveShot(v,'@method')||(g&&scr(v,g.cur))||resolveShot(v,'@start');if(ls){shots=shotHTML(v,ls);leftStep=gstepHTML(true,'참고용 화면이에요','결제수단을 고르는 화면이에요');}}
   shell(`<div class="gpage gut"><div class="gwrap"><div class="gleft">${leftStep}${shots}</div><div class="gcard">
     <div class="qtop">${run.qi?`<button class="icbtn" id="prev" aria-label="이전 질문" style="width:36px;height:36px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`:''}<div class="bar"><i style="width:${(run.qi+1)/Q.length*100}%"></i></div><span class="n">${run.qi+1}/${Q.length}</span></div>
     ${run.qi===0?`<span class="eyebrow">${run.end?'과제를 마쳤어요':'수고하셨어요'}</span>`:''}
