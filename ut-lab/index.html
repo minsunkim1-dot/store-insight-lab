@@ -107,6 +107,19 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .lbx .lbin .hs.top .sc-list,.lbx .lbin .hs.top [data-hs="up"],.lbx .lbin .hs.top [data-hs="down"]{pointer-events:auto}
 .lbx .lbx-close{margin-top:14px;border:0;background:#fff;color:var(--ink);border-radius:999px;padding:10px 18px;font-weight:700;font-size:14px}
 .lbx .lbx-hint{color:rgba(255,255,255,.75);font-size:13px;margin-top:8px}
+.gpage{min-height:calc(100dvh - var(--eb,0px) - var(--es,0px));background:var(--stage)}
+.gwrap{max-width:1180px;margin:0 auto;padding:18px 0 40px;display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:18px;align-items:start}
+@media (max-width:900px){.gwrap{grid-template-columns:1fr}}
+.gleft{position:sticky;top:calc(var(--eb,0px) + var(--es,0px) + 14px);display:flex;flex-direction:column;gap:10px;align-items:center}
+@media (max-width:900px){.gleft{position:static}}
+.gstep{align-self:stretch;display:flex;align-items:center;gap:10px;background:var(--surface);border:1.5px dashed var(--accent);border-radius:14px;padding:10px 14px;font-size:14px;color:var(--ink)}
+.gstep b{color:var(--accent);font-size:12px;letter-spacing:.04em;margin-right:4px}
+.gstep.ok{border-style:solid;border-color:var(--ok);color:var(--ok)}
+.gcard{background:var(--surface);border-radius:22px;padding:24px 22px;display:flex;flex-direction:column;gap:16px;box-shadow:0 1px 0 var(--line),0 24px 48px -32px rgba(0,0,0,.35)}
+.gcard h2{font-size:19px;font-weight:700;line-height:1.4}
+.gcard .opts button{padding:13px 15px;font-size:15px}
+.gcard .scale button{font-size:17px}
+.gcard.wait{opacity:.55}
 .rv{display:flex;flex-direction:column;gap:18px}
 .rv .rvi{display:flex;flex-direction:column;gap:8px}
 .rv .rvh{display:flex;align-items:baseline;gap:10px}
@@ -377,7 +390,7 @@ function renderRun(){
   if(!study||!playable().length){shell(`<div class="center gut"><div class="sheet"><span class="eyebrow">사용성 테스트</span><h1>아직 준비 중이에요</h1><p class="lead">곧 참여할 수 있어요. 링크를 보낸 분께 확인해 주세요.</p></div></div>`);return;}
   if(!isEditor&&already&&!(run&&run.phase==='done')){const upd=doneAt!==String(study.updatedAt||'1');shell(`<div class="center gut"><div class="sheet" style="align-items:center;text-align:center"><div class="donemark">${CHECK}</div><h1>이미 참여하셨어요</h1>${upd?'<p class="lead">테스트 화면이 업데이트됐어요.<br>바뀐 화면으로 한 번 더 참여할 수 있어요.</p><button class="btn blue block" id="rejoin">다시 참여하기</button>':'<p class="lead">한 사람당 한 번만 참여할 수 있어요.<br>도와주셔서 고마워요.</p>'}</div></div>`);const rj=$('#rejoin');if(rj)rj.addEventListener('click',async()=>{repeatFrom=doneAt||'1';already=false;run=null;await loadCounts();render();});return;}
   if(!run||!RV())newRun();
-  ({start:pStart,task:pTask,review:pReview,q:pQuestion,done:pDone})[run.phase]();
+  ({start:pStart,task:pTask,guide:pGuide,review:pReview,q:pQuestion,done:pDone})[run.phase]();
 }
 const CHECK='<svg width="30" height="30" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
@@ -554,7 +567,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&sheet){if(sheet.kin
 function finishTask(end,t){
   run.end=end;run.tTotal=t;run.qi=0;
   if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});
-  run.phase=study.questions.length?((study.review||[]).length?'review':'q'):'done';
+  run.gi=0;run.phase=(study.guide||[]).length?'guide':(study.questions.length?((study.review||[]).length?'review':'q'):'done');
   if(run.phase==='done')submit();else render();window.scrollTo(0,0);
 }
 
@@ -587,6 +600,51 @@ function openLightbox(vid,sid){
   const onKey=e=>{if(e.key==='Escape'){close();document.removeEventListener('keydown',onKey);}};document.addEventListener('keydown',onKey);
   window.addEventListener('resize',()=>scaleHs(qin),{once:true});
 }
+function pGuide(){
+  const v=RV();const G=study.guide||[];const g=G[run.gi];
+  if(!g){run.phase=study.questions.filter(x=>!guidedIds().has(x.id)).length?'q':'done';run.qi=0;if(run.phase==='done')submit();else render();return;}
+  const start=resolveShot(v,g.screen);if(!start){run.gi++;pGuide();return;}
+  const qids=[].concat(g.q||[]);const Q=qids.map(id=>study.questions.find(x=>x.id===id)).filter(Boolean);
+  run.g=run.g||{};const st=run.g[run.gi]=run.g[run.gi]||{cur:start.id,reached:!g.require,qi:0};
+  const need=g.require?resolveShot(v,g.require):null;
+  const q=Q[st.qi];const a=q?run.answers[q.id]:null;const lastQ=st.qi>=Q.length-1;const lastG=run.gi>=G.length-1;
+  const total=G.length+1;
+  const stepLine=st.reached?`<div class="gstep ok">${CHECK.replace('width="30" height="30"','width="18" height="18"')}<span>${esc(g.done||'좋아요, 이 화면을 보면서 답해주세요')}</span></div>`:`<div class="gstep"><b>해보기</b><span>${esc(g.prompt||'')}</span></div>`;
+  let qhtml='';
+  if(q){
+    const opts=(q.options||[]).map(o=>({label:o,value:o}));
+    qhtml=`<h2>${esc(q.label)}</h2>
+    ${q.type==='scale'?`<div><div class="scale" id="ans">${[1,2,3,4,5,6,7].map(n=>`<button data-v="${n}" aria-pressed="${a===n}">${n}</button>`).join('')}</div></div><div class="ends"><span>${esc(q.lo||'매우 어려움')}</span><span>${esc(q.hi||'매우 쉬움')}</span></div>`:''}
+    ${q.type==='choice'?`<div class="opts" id="ans">${opts.map(o=>`<button data-v="${esc(o.value)}" aria-pressed="${a===o.value}">${esc(o.label)}</button>`).join('')}</div>`:''}
+    ${q.type==='text'?`<textarea class="ta" id="ans-t" placeholder="${esc(q.placeholder||'자유롭게 적어주세요')}">${esc(a||'')}</textarea>`:''}
+    <button class="btn blue block" id="gnext" ${(q.type!=='text'&&a==null)?'disabled':''}>${lastQ?(lastG?'다음 질문으로':'다음 화면으로'):'다음'}</button>`;
+  }else qhtml=`<p class="lead">${esc(g.intro||'')}</p><button class="btn blue block" id="gnext">${lastG?'다음 질문으로':'다음 화면으로'}</button>`;
+  shell(`<div class="gpage gut"><div class="gwrap">
+    <div class="gleft">${stepLine}<div class="frame" id="gframe"><div id="scr">${stackHTML(v,scr(v,st.cur))}</div></div></div>
+    <div class="gcard${st.reached?'':' wait'}"><div class="qtop"><div class="bar"><i style="width:${(run.gi+1)/total*100}%"></i></div><span class="n">화면 ${run.gi+1}/${G.length}</span></div>
+      ${run.gi===0?`<span class="eyebrow">${run.end?'과제를 마쳤어요':'수고하셨어요'} · 이제 화면을 보면서 물어볼게요</span>`:''}
+      ${st.reached?qhtml:`<p class="lead">${esc(g.waitText||'왼쪽 화면에서 안내대로 눌러보면 질문이 나와요')}</p>`}
+    </div></div></div>`);
+  const fr=$('#gframe'),sc=$('#scr');
+  const fit=()=>{const s=scr(v,st.cur);const W=fr.parentElement.clientWidth;const k=Math.min(1,W/s.w);fr.style.width=Math.floor(s.w*k)+'px';fr.style.height=Math.floor(s.h*k)+'px';scaleHs(fr);};
+  fit();requestAnimationFrame(fit);window.onresize=fit;
+  const bindList=()=>{const ly=sc.querySelector('.top');const L=ly&&ly.querySelector('.sc-list');if(L){L.style.scrollBehavior='smooth';syncArrows(L);L.addEventListener('scroll',()=>syncArrows(L),{passive:true});}};
+  bindList();initLottie(sc);
+  fr.addEventListener('click',e=>{
+    const ly=sc.querySelector('.top');const el=e.target.closest('[data-hs]');if(!el||!ly||!ly.contains(el))return;
+    const cur=scr(v,st.cur);const hit=(cur.spots||[]).find(p=>p.id===el.dataset.hs);if(!hit)return;
+    if(hit.act==='up'||hit.act==='down'){const L=ly.querySelector('.sc-list');if(L)L.scrollBy({top:(hit.act==='up'?-1:1)*Math.round(L.clientHeight*.75),behavior:'smooth'});return;}
+    if(hit.act==='radio'){const ck=ly.querySelector('[data-check]');ly.querySelectorAll('[data-radio]').forEach(o=>{o.style.background='#F5F5F5';});el.style.background='#FFFFFF';el.style.position='relative';if(ck)el.appendChild(ck);return;}
+    let to=hit.act==='go'?hit.to:(hit.act==='back'?(cur.over||null):null);
+    if(!to||!scr(v,to))return;
+    if(g.lock&&need&&st.reached&&to!==need.id&&to!==st.cur)return;
+    st.cur=to;if(need&&to===need.id&&!st.reached){st.reached=true;}
+    pGuide();
+  });
+  const ans=$('#ans');if(ans)ans.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;run.answers[q.id]=q.type==='scale'?+b.dataset.v:b.dataset.v;$$('button',ans).forEach(x=>x.setAttribute('aria-pressed',x===b));const n=$('#gnext');if(n)n.disabled=false;});
+  const ta=$('#ans-t');if(ta)ta.addEventListener('input',()=>{run.answers[q.id]=ta.value.slice(0,1000);});
+  const n=$('#gnext');if(n)n.addEventListener('click',()=>{if(q&&!lastQ){st.qi++;pGuide();return;}run.gi++;pGuide();window.scrollTo(0,0);});
+}
 function pReview(){
   const v=RV();const items=(study.review||[]).map(r=>({r,s:resolveShot(v,r.show)})).filter(x=>x.s);
   if(!items.length){run.phase='q';render();return;}
@@ -600,8 +658,10 @@ function pReview(){
   bindShots();
   $('#toq').addEventListener('click',()=>{run.phase='q';run.qi=0;render();window.scrollTo(0,0);});
 }
+const guidedIds=()=>new Set((study.guide||[]).flatMap(g=>[].concat(g.q||[])));
 function pQuestion(){
-  const Q=study.questions,q=Q[run.qi],a=run.answers[q.id];
+  const Q=study.questions.filter(x=>!guidedIds().has(x.id)),q=Q[run.qi],a=run.answers[q.id];
+  if(!q){run.phase='done';submit();return;}
   const last=run.qi===Q.length-1;const isText=q.type==='text';
   const v=RV();let shots='',opts=q.options||[];
   if(q.show){shots=shotHTML(v,resolveShot(v,q.show));}
