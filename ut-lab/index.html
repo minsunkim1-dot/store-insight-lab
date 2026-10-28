@@ -589,8 +589,9 @@ function shotHTML(v,s,badge){
   const inner=s.html?((b?layerHTML(b,false,true):'')+layerHTML(s,true,true)):`<img src="${esc(s.src)}" alt="" style="width:100%;height:100%;display:block">`;
   return `<figure class="qshot zoomable" data-v="${esc(v.id)}" data-s="${esc(s.id)}" style="aspect-ratio:${s.w}/${s.h}">${badge?`<figcaption>${esc(badge)}</figcaption>`:''}<span class="zoomtip">크게 보기</span><div class="qin">${inner}</div></figure>`+(s.html&&s.html.includes('sc-list')&&!badge?'<p class="qnote">화면 안의 목록은 스크롤해서 볼 수 있어요</p>':'');
 }
-function bindShots(root){
-  $$('.qshot .qin',root||document).forEach(el=>{scaleHs(el);const L=el.querySelector('.hs.top .sc-list');if(L){L.style.scrollBehavior='smooth';syncArrows(L);L.addEventListener('scroll',()=>syncArrows(L),{passive:true});}
+function presetScroll(L,how){if(!L||!how)return;L.style.scrollBehavior='auto';const go=()=>{L.scrollTop=how==='bottom'?L.scrollHeight:(how==='top'?0:(+how||0));};go();requestAnimationFrame(go);}
+function bindShots(root,how){
+  $$('.qshot .qin',root||document).forEach(el=>{scaleHs(el);const L=el.querySelector('.hs.top .sc-list');if(L){presetScroll(L,how);L.style.scrollBehavior='smooth';syncArrows(L);L.addEventListener('scroll',()=>syncArrows(L),{passive:true});}
     el.addEventListener('click',e=>{const b=e.target.closest('[data-hs="up"],[data-hs="down"]');if(b&&L){L.scrollBy({top:(b.dataset.hs==='up'?-1:1)*Math.round(L.clientHeight*.75),behavior:'smooth'});return;}
       if(e.target.closest('.sc-list')&&L&&L.scrollHeight>L.clientHeight+4&&e.target.closest('[data-hs]'))return;
       const f=el.closest('.qshot');if(f&&!f.closest('.lbx'))openLightbox(f.dataset.v,f.dataset.s);});});
@@ -635,7 +636,7 @@ function pGuide(){
   const fr=$('#gframe'),sc=$('#scr');
   const fit=()=>{const s=scr(v,st.cur);const W=fr.parentElement.clientWidth;const k=Math.min(1,W/s.w);fr.style.width=Math.floor(s.w*k)+'px';fr.style.height=Math.floor(s.h*k)+'px';scaleHs(fr);};
   fit();requestAnimationFrame(fit);window.onresize=fit;
-  const bindList=()=>{const ly=sc.querySelector('.top');const L=ly&&ly.querySelector('.sc-list');if(L){L.style.scrollBehavior='smooth';syncArrows(L);L.addEventListener('scroll',()=>syncArrows(L),{passive:true});}};
+  const bindList=()=>{const ly=sc.querySelector('.top');const L=ly&&ly.querySelector('.sc-list');if(L){if(q&&st.reached)presetScroll(L,q.scroll);L.style.scrollBehavior='smooth';syncArrows(L);L.addEventListener('scroll',()=>syncArrows(L),{passive:true});}};
   bindList();initLottie(sc);
   fr.addEventListener('click',e=>{
     const ly=sc.querySelector('.top');const el=e.target.closest('[data-hs]');if(!el||!ly||!ly.contains(el))return;
@@ -693,7 +694,7 @@ function pQuestion(){
     ${saveErr&&last?`<div class="warnbox">${esc(saveErr)}</div>`:''}
     ${isText||last||a!=null?`<div class="qnav">${isText&&!a?`<button class="btn ghost" id="skip">${last?'건너뛰고 제출':'건너뛰기'}</button>`:''}<button class="btn blue block" id="next" ${(!isText&&a==null)?'disabled':''}>${last?'제출하기':'다음'}</button></div>`:''}
   </div></div></div>`);
-  bindShots();
+  bindShots(null,q.scroll);
   const go=()=>{if(last){const n=$('#next');if(n){n.disabled=true;n.textContent='보내는 중…';}submit();}else{run.qi++;render();}};
   const ans=$('#ans');if(ans)ans.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const first=a==null;run.answers[q.id]=q.type==='scale'?+b.dataset.v:b.dataset.v;$$('button',ans).forEach(x=>x.setAttribute('aria-pressed',x===b));if(!last&&first)setTimeout(go,260);else render();});
   const ta=$('#ans-t');if(ta){ta.addEventListener('input',()=>{const had=!!run.answers[q.id];run.answers[q.id]=ta.value.slice(0,1000);const sk=$('#skip');if(sk&&ta.value.trim())sk.remove();});}
