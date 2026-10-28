@@ -100,6 +100,17 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .qshot figcaption{position:absolute;left:10px;top:10px;z-index:5;background:var(--ink);color:var(--surface);font-size:13px;font-weight:700;padding:4px 10px;border-radius:999px}
 .qcmp{display:flex;flex-direction:column;gap:14px}
 .qnote{font-size:13px;color:var(--muted);margin-top:-10px}
+.qshot.zoomable{cursor:zoom-in}
+.zoomtip{position:absolute;right:10px;bottom:10px;z-index:5;background:rgba(21,22,26,.78);color:#fff;font-size:12px;font-weight:600;padding:4px 9px;border-radius:999px;pointer-events:none}
+.lbx{position:fixed;inset:0;z-index:70;background:rgba(12,14,20,.86);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;animation:fade .15s ease-out}
+.lbx .lbin{width:min(100%,1024px);background:#fff;border-radius:12px;overflow:hidden;position:relative}
+.lbx .lbin .hs.top .sc-list,.lbx .lbin .hs.top [data-hs="up"],.lbx .lbin .hs.top [data-hs="down"]{pointer-events:auto}
+.lbx .lbx-close{margin-top:14px;border:0;background:#fff;color:var(--ink);border-radius:999px;padding:10px 18px;font-weight:700;font-size:14px}
+.lbx .lbx-hint{color:rgba(255,255,255,.75);font-size:13px;margin-top:8px}
+.rv{display:flex;flex-direction:column;gap:18px}
+.rv .rvi{display:flex;flex-direction:column;gap:8px}
+.rv .rvh{display:flex;align-items:baseline;gap:10px}
+.rv .rvh b{font-size:16px}.rv .rvh span{font-size:13px;color:var(--muted)}
 .fine{font-size:12.5px;color:var(--faint);text-align:center}
 .warnbox{font-size:14px;border-radius:12px;padding:12px 14px;background:var(--warn-soft);color:var(--warn)}
 .tip{font-size:13px;color:var(--muted);display:flex;gap:8px;align-items:center;justify-content:center}
@@ -366,7 +377,7 @@ function renderRun(){
   if(!study||!playable().length){shell(`<div class="center gut"><div class="sheet"><span class="eyebrow">사용성 테스트</span><h1>아직 준비 중이에요</h1><p class="lead">곧 참여할 수 있어요. 링크를 보낸 분께 확인해 주세요.</p></div></div>`);return;}
   if(!isEditor&&already&&!(run&&run.phase==='done')){const upd=doneAt!==String(study.updatedAt||'1');shell(`<div class="center gut"><div class="sheet" style="align-items:center;text-align:center"><div class="donemark">${CHECK}</div><h1>이미 참여하셨어요</h1>${upd?'<p class="lead">테스트 화면이 업데이트됐어요.<br>바뀐 화면으로 한 번 더 참여할 수 있어요.</p><button class="btn blue block" id="rejoin">다시 참여하기</button>':'<p class="lead">한 사람당 한 번만 참여할 수 있어요.<br>도와주셔서 고마워요.</p>'}</div></div>`);const rj=$('#rejoin');if(rj)rj.addEventListener('click',async()=>{repeatFrom=doneAt||'1';already=false;run=null;await loadCounts();render();});return;}
   if(!run||!RV())newRun();
-  ({start:pStart,task:pTask,q:pQuestion,done:pDone})[run.phase]();
+  ({start:pStart,task:pTask,review:pReview,q:pQuestion,done:pDone})[run.phase]();
 }
 const CHECK='<svg width="30" height="30" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
@@ -543,7 +554,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&sheet){if(sheet.kin
 function finishTask(end,t){
   run.end=end;run.tTotal=t;run.qi=0;
   if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});
-  run.phase=study.questions.length?'q':'done';
+  run.phase=study.questions.length?((study.review||[]).length?'review':'q'):'done';
   if(run.phase==='done')submit();else render();window.scrollTo(0,0);
 }
 
@@ -558,7 +569,36 @@ function shotHTML(v,s,badge){
   if(!s)return '';
   const b=s.over&&scr(v,s.over);
   const inner=s.html?((b?layerHTML(b,false,true):'')+layerHTML(s,true,true)):`<img src="${esc(s.src)}" alt="" style="width:100%;height:100%;display:block">`;
-  return `<figure class="qshot" style="aspect-ratio:${s.w}/${s.h}">${badge?`<figcaption>${esc(badge)}</figcaption>`:''}<div class="qin">${inner}</div></figure>`+(s.html&&s.html.includes('sc-list')&&!badge?'<p class="qnote">화면 안의 목록은 스크롤해서 볼 수 있어요</p>':'');
+  return `<figure class="qshot zoomable" data-v="${esc(v.id)}" data-s="${esc(s.id)}" style="aspect-ratio:${s.w}/${s.h}">${badge?`<figcaption>${esc(badge)}</figcaption>`:''}<span class="zoomtip">크게 보기</span><div class="qin">${inner}</div></figure>`+(s.html&&s.html.includes('sc-list')&&!badge?'<p class="qnote">화면 안의 목록은 스크롤해서 볼 수 있어요</p>':'');
+}
+function bindShots(root){
+  $$('.qshot .qin',root||document).forEach(el=>{scaleHs(el);const L=el.querySelector('.hs.top .sc-list');if(L){L.style.scrollBehavior='smooth';syncArrows(L);L.addEventListener('scroll',()=>syncArrows(L),{passive:true});}
+    el.addEventListener('click',e=>{const b=e.target.closest('[data-hs="up"],[data-hs="down"]');if(b&&L){L.scrollBy({top:(b.dataset.hs==='up'?-1:1)*Math.round(L.clientHeight*.75),behavior:'smooth'});return;}
+      if(e.target.closest('.sc-list')&&L&&L.scrollHeight>L.clientHeight+4&&e.target.closest('[data-hs]'))return;
+      const f=el.closest('.qshot');if(f&&!f.closest('.lbx'))openLightbox(f.dataset.v,f.dataset.s);});});
+}
+function openLightbox(vid,sid){
+  const v=study.variants.find(x=>x.id===vid);const s=v&&scr(v,sid);if(!s)return;
+  const el=document.createElement('div');el.className='lbx';
+  el.innerHTML=`<div class="lbin"><figure class="qshot" data-v="${esc(vid)}" data-s="${esc(sid)}" style="aspect-ratio:${s.w}/${s.h};border:0;border-radius:0"><div class="qin">${(s.over&&scr(v,s.over)?layerHTML(scr(v,s.over),false,true):'')+layerHTML(s,true,true)}</div></figure></div><div class="lbx-hint">${s.html&&s.html.includes('sc-list')?'목록은 스크롤할 수 있어요 · ':''}바깥을 누르면 닫혀요</div><button class="lbx-close">닫기</button>`;
+  document.body.appendChild(el);
+  const qin=el.querySelector('.qin');scaleHs(qin);const L=qin.querySelector('.hs.top .sc-list');if(L){L.style.scrollBehavior='smooth';syncArrows(L);L.addEventListener('scroll',()=>syncArrows(L),{passive:true});qin.addEventListener('click',e=>{const b=e.target.closest('[data-hs="up"],[data-hs="down"]');if(b)L.scrollBy({top:(b.dataset.hs==='up'?-1:1)*Math.round(L.clientHeight*.75),behavior:'smooth'});});}
+  const close=()=>el.remove();el.querySelector('.lbx-close').addEventListener('click',close);el.addEventListener('click',e=>{if(e.target===el)close();});
+  const onKey=e=>{if(e.key==='Escape'){close();document.removeEventListener('keydown',onKey);}};document.addEventListener('keydown',onKey);
+  window.addEventListener('resize',()=>scaleHs(qin),{once:true});
+}
+function pReview(){
+  const v=RV();const items=(study.review||[]).map(r=>({r,s:resolveShot(v,r.show)})).filter(x=>x.s);
+  if(!items.length){run.phase='q';render();return;}
+  shell(`<div class="center gut"><div class="sheet wide">
+    <span class="eyebrow">${run.end?'과제를 마쳤어요':'수고하셨어요'}</span>
+    <h2 class="q">${esc(study.reviewTitle||'질문 전에, 방금 본 화면을 다시 볼게요')}</h2>
+    <p class="lead" style="margin-top:-8px">${esc(study.reviewLead||'천천히 봐도 돼요. 목록은 스크롤되고, 화면을 누르면 크게 볼 수 있어요.')}</p>
+    <div class="rv">${items.map((x,i)=>`<div class="rvi"><div class="rvh"><b>${i+1}. ${esc(x.r.title||x.s.name)}</b>${x.r.note?`<span>${esc(x.r.note)}</span>`:''}</div>${shotHTML(v,x.s,'')}</div>`).join('')}</div>
+    <button class="btn blue block" id="toq">질문에 답하기</button>
+  </div></div>`);
+  bindShots();
+  $('#toq').addEventListener('click',()=>{run.phase='q';run.qi=0;render();window.scrollTo(0,0);});
 }
 function pQuestion(){
   const Q=study.questions,q=Q[run.qi],a=run.answers[q.id];
@@ -583,8 +623,7 @@ function pQuestion(){
     ${saveErr&&last?`<div class="warnbox">${esc(saveErr)}</div>`:''}
     ${isText||last||a!=null?`<div class="qnav">${isText&&!a?`<button class="btn ghost" id="skip">${last?'건너뛰고 제출':'건너뛰기'}</button>`:''}<button class="btn blue block" id="next" ${(!isText&&a==null)?'disabled':''}>${last?'제출하기':'다음'}</button></div>`:''}
   </div></div>`);
-  $$('.qshot .qin').forEach(el=>{scaleHs(el);const L=el.querySelector('.hs.top .sc-list');if(L){L.style.scrollBehavior='smooth';syncArrows(L);L.addEventListener('scroll',()=>syncArrows(L),{passive:true});}
-    el.addEventListener('click',e=>{const b=e.target.closest('[data-hs="up"],[data-hs="down"]');if(!b||!L)return;L.scrollBy({top:(b.dataset.hs==='up'?-1:1)*Math.round(L.clientHeight*.75),behavior:'smooth'});});});
+  bindShots();
   const go=()=>{if(last){const n=$('#next');if(n){n.disabled=true;n.textContent='보내는 중…';}submit();}else{run.qi++;render();}};
   const ans=$('#ans');if(ans)ans.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const first=a==null;run.answers[q.id]=q.type==='scale'?+b.dataset.v:b.dataset.v;$$('button',ans).forEach(x=>x.setAttribute('aria-pressed',x===b));if(!last&&first)setTimeout(go,260);else render();});
   const ta=$('#ans-t');if(ta){ta.addEventListener('input',()=>{const had=!!run.answers[q.id];run.answers[q.id]=ta.value.slice(0,1000);const sk=$('#skip');if(sk&&ta.value.trim())sk.remove();});}
