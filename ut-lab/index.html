@@ -613,7 +613,7 @@ function spotlight(fr,els){
   const draw=()=>{fr.querySelectorAll('.qspot').forEach(x=>x.remove());if(!els.length)return;const R=fr.getBoundingClientRect();const W=R.width,H=R.height;
     const holes=els.map(el=>{const r=el.getBoundingClientRect();const L=el.closest('.sc-list');let t=r.top,b=r.bottom;if(L){const lr=L.getBoundingClientRect();t=Math.max(t,lr.top);b=Math.min(b,lr.bottom);}if(b<=t)return '';const rad=Math.min(parseFloat(getComputedStyle(el).borderTopLeftRadius)||0,(b-t)/2)*(r.width/el.offsetWidth||1);const pad=4;return `<rect x="${r.left-R.left-pad}" y="${t-R.top-pad}" width="${r.width+pad*2}" height="${b-t+pad*2}" rx="${rad+pad}" fill="#000"/>`;}).join('');
     const d=document.createElement('div');d.className='qspot';d.innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs><mask id="qspm"><rect width="${W}" height="${H}" fill="#fff"/>${holes}</mask></defs><rect width="${W}" height="${H}" fill="rgba(0,0,0,.5)" mask="url(#qspm)"/></svg>`;fr.appendChild(d);};
-  draw();requestAnimationFrame(draw);setTimeout(draw,350);
+  draw();requestAnimationFrame(draw);[350,800,1300,2000].forEach(t=>setTimeout(()=>{if(fr.isConnected)draw();},t));fr.addEventListener('animationend',()=>{if(fr.isConnected)draw();});
   els.forEach(el=>{const L=el.closest('.sc-list');if(L&&!L.dataset.spotOn){L.dataset.spotOn='1';L.addEventListener('scroll',()=>{const o=fr.querySelector('.qspot');draw();const n=fr.querySelector('.qspot');if(n)n.style.animation='none';},{passive:true});}});
   window.addEventListener('resize',draw);
 }
@@ -666,7 +666,7 @@ function pGuide(){
     if(hit.act==='radio'){const ck=ly.querySelector('[data-check]');ly.querySelectorAll('[data-radio]').forEach(o=>{o.style.background='#F5F5F5';});el.style.background='#FFFFFF';el.style.position='relative';if(ck)el.appendChild(ck);return;}
     let to=hit.act==='go'?hit.to:(hit.act==='back'?(cur.over||null):null);
     if(!to||!scr(v,to))return;
-    if(g.lock&&need&&st.reached&&to!==need.id&&to!==st.cur)return;
+    if(!(need&&!st.reached&&to===need.id))return;
     st.cur=to;if(need&&to===need.id&&!st.reached){st.reached=true;}
     pGuide();
   });
