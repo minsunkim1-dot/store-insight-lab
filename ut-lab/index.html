@@ -96,8 +96,8 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .qspot{position:absolute;inset:0;z-index:40;pointer-events:none;animation:qspotIn .35s ease both}@keyframes qspotIn{from{opacity:0}to{opacity:1}}
 .qshot{position:relative;margin:0;width:100%;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#fff}
 .qshot .qin{position:absolute;inset:0}
-.qshot .hs.top .sc-list,.qshot .hs.top [data-hs="up"],.qshot .hs.top [data-hs="down"]{pointer-events:auto}
-.qshot .hs.top [data-hs="up"],.qshot .hs.top [data-hs="down"]{cursor:pointer}
+.qshot .hs.top .sc-list,.qshot .hs.top [data-hs]{pointer-events:auto}
+.qshot .hs.top [data-hs]{cursor:pointer}.qshot .zoomtip{cursor:zoom-in}
 .qshot figcaption{position:absolute;left:10px;bottom:10px;z-index:5;background:var(--ink);color:var(--surface);font-size:13px;font-weight:700;padding:4px 10px;border-radius:999px}
 .qcmp{display:flex;flex-direction:column;gap:14px;width:100%;align-self:stretch}
 .qnote{font-size:13px;color:var(--muted);margin-top:-10px}
@@ -591,30 +591,45 @@ function shotHTML(v,s,badge){
   return `<figure class="qshot zoomable" data-v="${esc(v.id)}" data-s="${esc(s.id)}" style="aspect-ratio:${s.w}/${s.h}">${badge?`<figcaption>${esc(badge)}</figcaption>`:''}<span class="zoomtip">크게 보기</span><div class="qin">${inner}</div></figure>`+(s.html&&s.html.includes('sc-list')&&!badge?'<p class="qnote">화면 안의 목록은 스크롤해서 볼 수 있어요</p>':'');
 }
 function presetScroll(L,how,vid){if(how&&typeof how==='object')how=how[vid];if(!L||!how)return;L.style.scrollBehavior='auto';const go=()=>{L.scrollTop=how==='bottom'?L.scrollHeight:(how==='top'?0:(+how||0));};go();requestAnimationFrame(go);}
-function bindShots(root,how){
-  $$('.qshot .qin',root||document).forEach(el=>{scaleHs(el);const L=el.querySelector('.hs.top .sc-list');if(L){presetScroll(L,how,el.closest('.qshot').dataset.v);L.style.scrollBehavior='smooth';syncArrows(L);L.addEventListener('scroll',()=>syncArrows(L),{passive:true});}
-    el.addEventListener('click',e=>{const b=e.target.closest('[data-hs="up"],[data-hs="down"]');if(b&&L){L.scrollBy({top:(b.dataset.hs==='up'?-1:1)*Math.round(L.clientHeight*.75),behavior:'smooth'});return;}
-      if(e.target.closest('.sc-list')&&L&&L.scrollHeight>L.clientHeight+4&&e.target.closest('[data-hs]'))return;
-      const f=el.closest('.qshot');if(f&&!f.closest('.lbx'))openLightbox(f.dataset.v,f.dataset.s);});});
+function figRender(fig,sid){
+  const v=study.variants.find(x=>x.id===fig.dataset.v);const s=v&&scr(v,sid);if(!s)return;fig.dataset.s=sid;fig.style.aspectRatio=s.w+'/'+s.h;
+  const qin=fig.querySelector('.qin');qin.innerHTML=(s.over&&scr(v,s.over)?layerHTML(scr(v,s.over),false,true):'')+layerHTML(s,true,true);figBind(fig);
 }
+function figBind(fig,how){
+  const qin=fig.querySelector('.qin');scaleHs(qin);const L=qin.querySelector('.hs.top .sc-list');
+  if(L){presetScroll(L,how,fig.dataset.v);L.style.scrollBehavior='smooth';syncArrows(L);L.addEventListener('scroll',()=>syncArrows(L),{passive:true});}
+  if(fig.dataset.nav)return;fig.dataset.nav='1';
+  fig.addEventListener('click',e=>{
+    const ly=fig.querySelector('.hs.top');const el=e.target.closest('[data-hs]');
+    if(el&&ly&&ly.contains(el)){e.stopPropagation();const v=study.variants.find(x=>x.id===fig.dataset.v);const cur=scr(v,fig.dataset.s);const hit=cur&&(cur.spots||[]).find(p=>p.id===el.dataset.hs);if(!hit)return;
+      const Lc=ly.querySelector('.sc-list');
+      if(hit.act==='up'||hit.act==='down'){if(Lc)Lc.scrollBy({top:(hit.act==='up'?-1:1)*Math.round(Lc.clientHeight*.75),behavior:'smooth'});return;}
+      const to=hit.act==='go'?hit.to:(hit.act==='back'?(cur.over||null):null);if(to&&scr(v,to))figRender(fig,to);return;}
+    if(!fig.closest('.lbx')){e.stopPropagation();openLightbox(fig.dataset.v,fig.dataset.s);}
+  });
+}
+function bindShots(root,how){$$('.qshot',root||document).forEach(f=>figBind(f,how));}
 function openLightbox(vid,sid){
   const v=study.variants.find(x=>x.id===vid);const s=v&&scr(v,sid);if(!s)return;
   const el=document.createElement('div');el.className='lbx';
-  el.innerHTML=`<div class="lbin"><figure class="qshot" data-v="${esc(vid)}" data-s="${esc(sid)}" style="aspect-ratio:${s.w}/${s.h};border:0;border-radius:0"><div class="qin">${(s.over&&scr(v,s.over)?layerHTML(scr(v,s.over),false,true):'')+layerHTML(s,true,true)}</div></figure></div><div class="lbx-hint">${s.html&&s.html.includes('sc-list')?'목록은 스크롤할 수 있어요 · ':''}바깥을 누르면 닫혀요</div><button class="lbx-close">닫기</button>`;
+  el.innerHTML=`<div class="lbin"><figure class="qshot" data-v="${esc(vid)}" data-s="${esc(sid)}" style="aspect-ratio:${s.w}/${s.h};border:0;border-radius:0"><div class="qin">${(s.over&&scr(v,s.over)?layerHTML(scr(v,s.over),false,true):'')+layerHTML(s,true,true)}</div></figure></div><div class="lbx-hint">${s.html&&s.html.includes('sc-list')?'목록은 스크롤할 수 있어요 · ':''}화면을 눌러볼 수 있어요 · 바깥을 누르면 닫혀요</div><button class="lbx-close">닫기</button>`;
   document.body.appendChild(el);
-  const qin=el.querySelector('.qin');scaleHs(qin);const L=qin.querySelector('.hs.top .sc-list');if(L){L.style.scrollBehavior='smooth';syncArrows(L);L.addEventListener('scroll',()=>syncArrows(L),{passive:true});qin.addEventListener('click',e=>{const b=e.target.closest('[data-hs="up"],[data-hs="down"]');if(b)L.scrollBy({top:(b.dataset.hs==='up'?-1:1)*Math.round(L.clientHeight*.75),behavior:'smooth'});});}
+  const qin=el.querySelector('.qin');figBind(el.querySelector('.qshot'));
   const close=()=>el.remove();el.querySelector('.lbx-close').addEventListener('click',close);el.addEventListener('click',e=>{if(e.target===el)close();});
   const onKey=e=>{if(e.key==='Escape'){close();document.removeEventListener('keydown',onKey);}};document.addEventListener('keydown',onKey);
-  window.addEventListener('resize',()=>scaleHs(qin),{once:true});
+  window.addEventListener('resize',()=>scaleHs(el.querySelector('.qin')),{once:true});
 }
 const HAND='<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M9 11V5.5a1.5 1.5 0 013 0V10m0 0V4.5a1.5 1.5 0 013 0V10m0 0V6.5a1.5 1.5 0 013 0V14a7 7 0 01-7 7h-.6a6 6 0 01-4.6-2.2L3.6 15.4a1.6 1.6 0 012.4-2.1L9 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const gstepHTML=(ok,title,sub)=>`<div class="gstep${ok?' ok':''}"><span class="gico" aria-hidden="true">${ok?CHECK.replace('width="30" height="30"','width="24" height="24"'):HAND.replace('width="22" height="22"','width="24" height="24"')}</span><p><b>${esc(title)}</b>${sub?esc(sub):''}</p></div>`;
 function spotlight(fr,els){
-  const draw=()=>{fr.querySelectorAll('.qspot').forEach(x=>x.remove());if(!els.length)return;const R=fr.getBoundingClientRect();const W=R.width,H=R.height;
+  let box=null;
+  const draw=()=>{if(!fr.isConnected||!els.length)return;const R=fr.getBoundingClientRect();const W=R.width,H=R.height;
     const holes=els.map(el=>{const r=el.getBoundingClientRect();const L=el.closest('.sc-list');let t=r.top,b=r.bottom;if(L){const lr=L.getBoundingClientRect();t=Math.max(t,lr.top);b=Math.min(b,lr.bottom);}if(b<=t)return '';const rad=Math.min(parseFloat(getComputedStyle(el).borderTopLeftRadius)||0,(b-t)/2)*(r.width/el.offsetWidth||1);const pad=4;return `<rect x="${r.left-R.left-pad}" y="${t-R.top-pad}" width="${r.width+pad*2}" height="${b-t+pad*2}" rx="${rad+pad}" fill="#000"/>`;}).join('');
-    const d=document.createElement('div');d.className='qspot';d.innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs><mask id="qspm"><rect width="${W}" height="${H}" fill="#fff"/>${holes}</mask></defs><rect width="${W}" height="${H}" fill="rgba(0,0,0,.5)" mask="url(#qspm)"/></svg>`;fr.appendChild(d);};
-  draw();requestAnimationFrame(draw);[350,800,1300,2000].forEach(t=>setTimeout(()=>{if(fr.isConnected)draw();},t));fr.addEventListener('animationend',()=>{if(fr.isConnected)draw();});
-  els.forEach(el=>{const L=el.closest('.sc-list');if(L&&!L.dataset.spotOn){L.dataset.spotOn='1';L.addEventListener('scroll',()=>{const o=fr.querySelector('.qspot');draw();const n=fr.querySelector('.qspot');if(n)n.style.animation='none';},{passive:true});}});
+    const svg=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs><mask id="qspm"><rect width="${W}" height="${H}" fill="#fff"/>${holes}</mask></defs><rect width="${W}" height="${H}" fill="rgba(0,0,0,.5)" mask="url(#qspm)"/></svg>`;
+    if(!box||!box.isConnected){fr.querySelectorAll('.qspot').forEach(x=>x.remove());box=document.createElement('div');box.className='qspot';fr.appendChild(box);}
+    if(box.innerHTML!==svg)box.innerHTML=svg;};
+  draw();requestAnimationFrame(draw);[350,800,1300,2000].forEach(t=>setTimeout(draw,t));
+  els.forEach(el=>{const L=el.closest('.sc-list');if(L&&!L.dataset.spotOn){L.dataset.spotOn='1';L.addEventListener('scroll',draw,{passive:true});}});
   window.addEventListener('resize',draw);
 }
 function qOrder(){const g=[].concat(...(study.guide||[]).map(x=>[].concat(x.q||[])));const rest=study.questions.filter(x=>!g.includes(x.id)).map(x=>x.id);return g.concat(rest).filter(id=>study.questions.some(x=>x.id===id));}
@@ -702,8 +717,8 @@ function pQuestion(){
     opts=order.map((vv,i)=>({label:(q.optLabel||'{n}번이 더 보기 편해요').replace('{n}',i+1),value:vv.name})).concat([{label:'비슷해요',value:'비슷해요'}]);
   }else opts=opts.map(o=>({label:o,value:o}));
   let leftStep='';
-  if(q.type==='compare')leftStep=gstepHTML(true,q.stepTitle||'두 시안의 팝업이에요','눌러서 크게 볼 수 있어요');
-  else if(q.show)leftStep=gstepHTML(true,'방금 본 화면이에요','눌러서 크게 볼 수 있어요');
+  if(q.type==='compare')leftStep=gstepHTML(true,q.stepTitle||'두 시안의 팝업이에요','배너를 눌러 팝업까지 볼 수 있어요');
+  else if(q.show)leftStep=gstepHTML(true,'방금 본 화면이에요','배너를 눌러 팝업까지 볼 수 있어요');
   else{const g=run.g&&Object.values(run.g).slice(-1)[0];const ls=resolveShot(v,'@method')||(g&&scr(v,g.cur))||resolveShot(v,'@start');if(ls){shots=shotHTML(v,ls);leftStep=gstepHTML(true,'참고용 화면이에요','결제수단을 고르는 화면이에요');}}
   shell(`<div class="gpage gut"><div class="gwrap"><div class="gleft">${leftStep}${shots}</div><div class="gcard">
     <div class="qtop">${run.qi?`<button class="icbtn" id="prev" aria-label="이전 질문" style="width:36px;height:36px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`:''}${qProg(q.id)}</div>
