@@ -93,6 +93,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .flow strong{color:var(--ink);font-size:15px;font-weight:600}
 @media (max-width:480px){.mission p{font-size:18px}}
 .sheet.wide{max-width:760px}
+.qhl{outline:3px solid #245EFF;outline-offset:-3px;animation:qhl .5s ease-in-out 4 alternate}@keyframes qhl{from{outline-color:#245EFF}to{outline-color:rgba(36,94,255,.15)}}
 .qshot{position:relative;margin:0;width:100%;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#fff}
 .qshot .qin{position:absolute;inset:0}
 .qshot .hs.top .sc-list,.qshot .hs.top [data-hs="up"],.qshot .hs.top [data-hs="down"]{pointer-events:auto}
@@ -648,7 +649,7 @@ function pGuide(){
   const fr=$('#gframe'),sc=$('#scr');
   const fit=()=>{const s=scr(v,st.cur);const W=fr.parentElement.clientWidth;const k=Math.min(1,W/s.w);fr.style.width=Math.floor(s.w*k)+'px';fr.style.height=Math.floor(s.h*k)+'px';scaleHs(fr);};
   fit();requestAnimationFrame(fit);window.onresize=fit;
-  const bindList=()=>{const ly=sc.querySelector('.top');const L=ly&&ly.querySelector('.sc-list');if(L){if(q&&st.reached)presetScroll(L,q.scroll,v.id);L.style.scrollBehavior='smooth';syncArrows(L);L.addEventListener('scroll',()=>syncArrows(L),{passive:true});}};
+  const bindList=()=>{const ly=sc.querySelector('.top');if(ly&&q&&st.reached&&q.highlight)[].concat(q.highlight).forEach(id=>ly.querySelectorAll('[data-hs="'+id+'"]').forEach(el=>el.classList.add('qhl')));const L=ly&&ly.querySelector('.sc-list');if(L){if(q&&st.reached)presetScroll(L,q.scroll,v.id);L.style.scrollBehavior='smooth';syncArrows(L);L.addEventListener('scroll',()=>syncArrows(L),{passive:true});}};
   bindList();initLottie(sc);
   fr.addEventListener('click',e=>{
     const ly=sc.querySelector('.top');const el=e.target.closest('[data-hs]');if(!el||!ly||!ly.contains(el))return;
