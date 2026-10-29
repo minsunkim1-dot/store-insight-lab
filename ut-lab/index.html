@@ -97,7 +97,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .qshot .qin{position:absolute;inset:0}
 .qshot .hs.top .sc-list,.qshot .hs.top [data-hs="up"],.qshot .hs.top [data-hs="down"]{pointer-events:auto}
 .qshot .hs.top [data-hs="up"],.qshot .hs.top [data-hs="down"]{cursor:pointer}
-.qshot figcaption{position:absolute;left:10px;top:10px;z-index:5;background:var(--ink);color:var(--surface);font-size:13px;font-weight:700;padding:4px 10px;border-radius:999px}
+.qshot figcaption{position:absolute;left:10px;bottom:10px;z-index:5;background:var(--ink);color:var(--surface);font-size:13px;font-weight:700;padding:4px 10px;border-radius:999px}
 .qcmp{display:flex;flex-direction:column;gap:14px;width:100%;align-self:stretch}
 .qnote{font-size:13px;color:var(--muted);margin-top:-10px}
 .qshot.zoomable{cursor:zoom-in}
@@ -688,7 +688,7 @@ function pQuestion(){
     if(!run.cmp[q.id]){const ids=study.variants.map(x=>x.id);run.cmp[q.id]=Math.random()<.5?ids:ids.slice().reverse();}
     const order=run.cmp[q.id].map(id=>study.variants.find(x=>x.id===id)).filter(Boolean);
     shots=`<div class="qcmp">${order.map((vv,i)=>shotHTML(vv,resolveShot(vv,q.compare||'@popup'),(i+1)+'번')).join('')}</div>`;
-    opts=order.map((vv,i)=>({label:(i+1)+'번이 더 보기 편해요',value:vv.name})).concat([{label:'비슷해요',value:'비슷해요'}]);
+    opts=order.map((vv,i)=>({label:(q.optLabel||'{n}번이 더 보기 편해요').replace('{n}',i+1),value:vv.name})).concat([{label:'비슷해요',value:'비슷해요'}]);
   }else opts=opts.map(o=>({label:o,value:o}));
   let leftStep='';
   if(q.type==='compare')leftStep=gstepHTML(true,q.stepTitle||'두 시안의 팝업이에요','눌러서 크게 볼 수 있어요');
