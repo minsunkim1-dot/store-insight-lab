@@ -608,12 +608,14 @@ function openLightbox(vid,sid){
 }
 const HAND='<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M9 11V5.5a1.5 1.5 0 013 0V10m0 0V4.5a1.5 1.5 0 013 0V10m0 0V6.5a1.5 1.5 0 013 0V14a7 7 0 01-7 7h-.6a6 6 0 01-4.6-2.2L3.6 15.4a1.6 1.6 0 012.4-2.1L9 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const gstepHTML=(ok,title,sub)=>`<div class="gstep${ok?' ok':''}"><span class="gico" aria-hidden="true">${ok?CHECK.replace('width="30" height="30"','width="24" height="24"'):HAND.replace('width="22" height="22"','width="24" height="24"')}</span><p><b>${esc(title)}</b>${sub?esc(sub):''}</p></div>`;
+function qOrder(){const g=[].concat(...(study.guide||[]).map(x=>[].concat(x.q||[])));const rest=study.questions.filter(x=>!g.includes(x.id)).map(x=>x.id);return g.concat(rest).filter(id=>study.questions.some(x=>x.id===id));}
+function qProg(id){const o=qOrder();const k=Math.max(0,o.indexOf(id))+1;return `<div class="bar"><i style="width:${k/o.length*100}%"></i></div><span class="n">질문 ${k}/${o.length}</span>`;}
 function pGuide(){
   const v=RV();const G=study.guide||[];const g=G[run.gi];
   if(!g){run.phase=study.questions.filter(x=>!guidedIds().has(x.id)).length?'q':'done';run.qi=0;if(run.phase==='done')submit();else render();return;}
   if(g.screen==='none'){const Qn=[].concat(g.q||[]).map(id=>study.questions.find(x=>x.id===id)).filter(Boolean);run.g=run.g||{};const sn=run.g[run.gi]=run.g[run.gi]||{qi:0};const qn=Qn[sn.qi];if(!qn){run.gi++;pGuide();return;}
     const an=run.answers[qn.id];const lastN=sn.qi>=Qn.length-1;const lastGn=run.gi>=G.length-1;
-    shell(`<div class="center gut"><div class="sheet">${run.gi===0?`<span class="eyebrow">${run.end?'과제를 마쳤어요':'수고하셨어요'}</span>`:''}${g.intro?`<p class="lead">${esc(g.intro)}</p>`:''}<h2 class="q">${esc(qn.label)}</h2>
+    shell(`<div class="center gut"><div class="sheet"><div class="qtop">${qProg(qn.id)}</div>${run.gi===0?`<span class="eyebrow">${run.end?'과제를 마쳤어요':'수고하셨어요'}</span>`:''}${g.intro?`<p class="lead">${esc(g.intro)}</p>`:''}<h2 class="q">${esc(qn.label)}</h2>
       ${qn.type==='scale'?`<div><div class="scale" id="ans">${[1,2,3,4,5,6,7].map(n=>`<button data-v="${n}" aria-pressed="${an===n}">${n}</button>`).join('')}</div></div><div class="ends"><span>${esc(qn.lo||'매우 어려움')}</span><span>${esc(qn.hi||'매우 쉬움')}</span></div>`:''}
       ${qn.type==='choice'?`<div class="opts" id="ans">${(qn.options||[]).map(o=>`<button data-v="${esc(o)}" aria-pressed="${an===o}">${esc(o)}</button>`).join('')}</div>`:''}
       ${qn.type==='text'?`<textarea class="ta" id="ans-t" placeholder="${esc(qn.placeholder||'자유롭게 적어주세요')}">${esc(an||'')}</textarea>`:''}
@@ -639,7 +641,7 @@ function pGuide(){
   }else qhtml=`<p class="lead">${esc(g.intro||'')}</p><button class="btn blue block" id="gnext">${lastG?'다음 질문으로':'다음 화면으로'}</button>`;
   shell(`<div class="gpage gut"><div class="gwrap">
     <div class="gleft">${stepLine}<div class="frame" id="gframe"><div id="scr">${stackHTML(v,scr(v,st.cur))}</div></div></div>
-    <div class="gcard${st.reached?'':' wait'}"><div class="qtop"><div class="bar"><i style="width:${(run.gi+1)/total*100}%"></i></div><span class="n">화면 ${run.gi+1}/${G.length}</span></div>
+    <div class="gcard${st.reached?'':' wait'}"><div class="qtop">${qProg((q||Q[0]||{}).id)}</div>
       ${run.gi===0?`<span class="eyebrow">${run.end?'과제를 마쳤어요':'수고하셨어요'} · 이제 화면을 보면서 물어볼게요</span>`:''}
       ${st.reached?qhtml:`<p class="lead">화면에서 안내대로 눌러보면 질문이 나와요</p>`}
     </div></div></div>`);
@@ -695,7 +697,7 @@ function pQuestion(){
   else if(q.show)leftStep=gstepHTML(true,'방금 본 화면이에요','눌러서 크게 볼 수 있어요');
   else{const g=run.g&&Object.values(run.g).slice(-1)[0];const ls=resolveShot(v,'@method')||(g&&scr(v,g.cur))||resolveShot(v,'@start');if(ls){shots=shotHTML(v,ls);leftStep=gstepHTML(true,'참고용 화면이에요','결제수단을 고르는 화면이에요');}}
   shell(`<div class="gpage gut"><div class="gwrap"><div class="gleft">${leftStep}${shots}</div><div class="gcard">
-    <div class="qtop">${run.qi?`<button class="icbtn" id="prev" aria-label="이전 질문" style="width:36px;height:36px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`:''}<div class="bar"><i style="width:${(run.qi+1)/Q.length*100}%"></i></div><span class="n">${run.qi+1}/${Q.length}</span></div>
+    <div class="qtop">${run.qi?`<button class="icbtn" id="prev" aria-label="이전 질문" style="width:36px;height:36px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`:''}${qProg(q.id)}</div>
     ${run.qi===0?`<span class="eyebrow">${run.end?'과제를 마쳤어요':'수고하셨어요'}</span>`:''}
     <h2 class="q">${esc(q.label)}</h2>
     ${q.type==='scale'?`<div><div class="scale" id="ans">${[1,2,3,4,5,6,7].map(n=>`<button data-v="${n}" aria-pressed="${a===n}" aria-label="${n}점">${n}</button>`).join('')}</div></div><div class="ends"><span>${esc(q.lo||'매우 어려움')}</span><span>${esc(q.hi||'매우 쉬움')}</span></div>`:''}
