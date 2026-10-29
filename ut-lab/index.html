@@ -591,6 +591,7 @@ function shotHTML(v,s,badge){
   const inner=s.html?((b?layerHTML(b,false,true):'')+layerHTML(s,true,true)):`<img src="${esc(s.src)}" alt="" style="width:100%;height:100%;display:block">`;
   return `<figure class="qshot zoomable" data-v="${esc(v.id)}" data-s="${esc(s.id)}" style="aspect-ratio:${s.w}/${s.h}">${badge?`<figcaption>${esc(badge)}</figcaption>`:''}<span class="zoomtip">크게 보기</span><div class="qin">${inner}</div></figure>`+(s.html&&s.html.includes('sc-list')&&!badge?'<p class="qnote">화면 안의 목록은 스크롤해서 볼 수 있어요</p>':'');
 }
+function fmtAt(iso){const d=new Date(iso||'');if(isNaN(d))return '';const z=n=>String(n).padStart(2,'0');return z(d.getMonth()+1)+'-'+z(d.getDate())+' '+z(d.getHours())+':'+z(d.getMinutes());}
 function presetScroll(L,how,vid){if(how&&typeof how==='object')how=how[vid];if(!L||!how)return;L.style.scrollBehavior='auto';const go=()=>{L.scrollTop=how==='bottom'?L.scrollHeight:(how==='top'?0:(+how||0));};go();requestAnimationFrame(go);}
 function figRender(fig,sid){
   const v=study.variants.find(x=>x.id===fig.dataset.v);const s=v&&scr(v,sid);if(!s)return;fig.dataset.s=sid;fig.style.aspectRatio=s.w+'/'+s.h;
@@ -864,7 +865,7 @@ function renderResults(){
   <section class="card"><div class="card-h"><div><h2>요약</h2><p class="sub">Claude에게 "UT 결과 요약해줘"라고 하면 Supabase 응답을 읽어 정리해 드려요</p></div></div></section>
 
   ${total?`<section class="card"><details><summary>응답 ${total}건 모두 보기</summary><div class="tablewrap"><table><thead><tr><th>시안</th><th>참여</th><th>성별·나이</th><th>결과</th><th>경로</th><th class="n">시간</th><th>답변</th><th>날짜</th></tr></thead><tbody>
-    ${[...sessions].sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt))).map(s=>{const v=vs.find(x=>x.id===s.variant);return `<tr><td>${esc(s.variant)}</td><td>${esc(s.role||'–')}</td><td>${esc([s.gender,s.age].filter(Boolean).join(' · ')||'–')}</td><td>${s.outcome==='giveup'?'포기':(s.ok?'✓ ':'')+esc(s.endLabel||'')}</td><td>${(s.path||[]).length}화면</td><td class="n">${sec(s.tTotal)}</td><td>${study.questions.map(q=>s.answers&&s.answers[q.id]!=null&&s.answers[q.id]!==''?esc(String(s.answers[q.id]).slice(0,80)):'').filter(Boolean).join(' · ')}</td><td>${esc(String(s.createdAt||'').slice(5,16).replace('T',' '))}</td></tr>`;}).join('')}
+    ${[...sessions].sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt))).map(s=>{const v=vs.find(x=>x.id===s.variant);return `<tr><td>${esc(s.variant)}</td><td>${esc(s.role||'–')}</td><td>${esc([s.gender,s.age].filter(Boolean).join(' · ')||'–')}</td><td>${s.outcome==='giveup'?'포기':(s.ok?'✓ ':'')+esc(s.endLabel||'')}</td><td>${(s.path||[]).length}화면</td><td class="n">${sec(s.tTotal)}</td><td>${study.questions.map(q=>s.answers&&s.answers[q.id]!=null&&s.answers[q.id]!==''?esc(String(s.answers[q.id]).slice(0,80)):'').filter(Boolean).join(' · ')}</td><td>${esc(fmtAt(s.createdAt))}</td></tr>`;}).join('')}
   </tbody></table></div></details></section>`:''}
   </div></div>`;
 
