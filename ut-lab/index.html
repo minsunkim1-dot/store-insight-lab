@@ -93,7 +93,8 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .flow strong{color:var(--ink);font-size:15px;font-weight:600}
 @media (max-width:480px){.mission p{font-size:18px}}
 .sheet.wide{max-width:760px}
-.qspot{position:absolute;inset:0;z-index:40;pointer-events:none;animation:qspotIn .35s ease both}@keyframes qspotIn{from{opacity:0}to{opacity:1}}
+.still .slot,.still .grow,.still .pill-in,.still .shine{animation:none!important}
+.qspot{position:absolute;inset:0;z-index:40;pointer-events:none;animation:qspotIn .3s ease .15s both}@keyframes qspotIn{from{opacity:0}to{opacity:1}}
 .qshot{position:relative;margin:0;width:100%;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#fff}
 .qshot .qin{position:absolute;inset:0}
 .qshot .hs.top .sc-list,.qshot .hs.top [data-hs]{pointer-events:auto}
@@ -670,6 +671,7 @@ function pGuide(){
       ${st.reached?qhtml:`<p class="lead">화면에서 안내대로 눌러보면 질문이 나와요</p>`}
     </div></div></div>`);
   const fr=$('#gframe'),sc=$('#scr');
+  fr.classList.add('still');
   const fit=()=>{const s=scr(v,st.cur);const W=fr.parentElement.clientWidth;const k=Math.min(1,W/s.w);fr.style.width=Math.floor(s.w*k)+'px';fr.style.height=Math.floor(s.h*k)+'px';scaleHs(fr);};
   fit();requestAnimationFrame(fit);window.onresize=fit;
   const bindList=()=>{const ly=sc.querySelector('.top');if(ly&&q&&st.reached&&q.highlight)spotlight(fr,[].concat(q.highlight).flatMap(id=>[...ly.querySelectorAll('[data-hs="'+id+'"]')]));const L=ly&&ly.querySelector('.sc-list');if(L){if(q&&st.reached)presetScroll(L,q.scroll,v.id);L.style.scrollBehavior='smooth';syncArrows(L);L.addEventListener('scroll',()=>syncArrows(L),{passive:true});}};
