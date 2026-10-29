@@ -681,7 +681,7 @@ function pQuestion(){
     opts=order.map((vv,i)=>({label:(i+1)+'번이 더 보기 편해요',value:vv.name})).concat([{label:'비슷해요',value:'비슷해요'}]);
   }else opts=opts.map(o=>({label:o,value:o}));
   let leftStep='';
-  if(q.type==='compare')leftStep=gstepHTML(true,'두 시안의 팝업이에요','눌러서 크게 볼 수 있어요');
+  if(q.type==='compare')leftStep=gstepHTML(true,q.stepTitle||'두 시안의 팝업이에요','눌러서 크게 볼 수 있어요');
   else if(q.show)leftStep=gstepHTML(true,'방금 본 화면이에요','눌러서 크게 볼 수 있어요');
   else{const g=run.g&&Object.values(run.g).slice(-1)[0];const ls=resolveShot(v,'@method')||(g&&scr(v,g.cur))||resolveShot(v,'@start');if(ls){shots=shotHTML(v,ls);leftStep=gstepHTML(true,'참고용 화면이에요','결제수단을 고르는 화면이에요');}}
   shell(`<div class="gpage gut"><div class="gwrap"><div class="gleft">${leftStep}${shots}</div><div class="gcard">
