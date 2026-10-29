@@ -93,7 +93,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .flow strong{color:var(--ink);font-size:15px;font-weight:600}
 @media (max-width:480px){.mission p{font-size:18px}}
 .sheet.wide{max-width:760px}
-.qhl{outline:3px solid #245EFF;outline-offset:-3px;animation:qhl .5s ease-in-out 4 alternate}@keyframes qhl{from{outline-color:#245EFF}to{outline-color:rgba(36,94,255,.15)}}
+.qspot{position:absolute;inset:0;z-index:40;pointer-events:none;animation:qspotIn .35s ease both}@keyframes qspotIn{from{opacity:0}to{opacity:1}}
 .qshot{position:relative;margin:0;width:100%;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#fff}
 .qshot .qin{position:absolute;inset:0}
 .qshot .hs.top .sc-list,.qshot .hs.top [data-hs="up"],.qshot .hs.top [data-hs="down"]{pointer-events:auto}
@@ -609,6 +609,14 @@ function openLightbox(vid,sid){
 }
 const HAND='<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M9 11V5.5a1.5 1.5 0 013 0V10m0 0V4.5a1.5 1.5 0 013 0V10m0 0V6.5a1.5 1.5 0 013 0V14a7 7 0 01-7 7h-.6a6 6 0 01-4.6-2.2L3.6 15.4a1.6 1.6 0 012.4-2.1L9 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const gstepHTML=(ok,title,sub)=>`<div class="gstep${ok?' ok':''}"><span class="gico" aria-hidden="true">${ok?CHECK.replace('width="30" height="30"','width="24" height="24"'):HAND.replace('width="22" height="22"','width="24" height="24"')}</span><p><b>${esc(title)}</b>${sub?esc(sub):''}</p></div>`;
+function spotlight(fr,els){
+  const draw=()=>{fr.querySelectorAll('.qspot').forEach(x=>x.remove());if(!els.length)return;const R=fr.getBoundingClientRect();const W=R.width,H=R.height;
+    const holes=els.map(el=>{const r=el.getBoundingClientRect();const L=el.closest('.sc-list');let t=r.top,b=r.bottom;if(L){const lr=L.getBoundingClientRect();t=Math.max(t,lr.top);b=Math.min(b,lr.bottom);}if(b<=t)return '';const rad=Math.min(parseFloat(getComputedStyle(el).borderTopLeftRadius)||0,(b-t)/2)*(r.width/el.offsetWidth||1);const pad=4;return `<rect x="${r.left-R.left-pad}" y="${t-R.top-pad}" width="${r.width+pad*2}" height="${b-t+pad*2}" rx="${rad+pad}" fill="#000"/>`;}).join('');
+    const d=document.createElement('div');d.className='qspot';d.innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs><mask id="qspm"><rect width="${W}" height="${H}" fill="#fff"/>${holes}</mask></defs><rect width="${W}" height="${H}" fill="rgba(0,0,0,.5)" mask="url(#qspm)"/></svg>`;fr.appendChild(d);};
+  draw();requestAnimationFrame(draw);setTimeout(draw,350);
+  els.forEach(el=>{const L=el.closest('.sc-list');if(L&&!L.dataset.spotOn){L.dataset.spotOn='1';L.addEventListener('scroll',()=>{const o=fr.querySelector('.qspot');draw();const n=fr.querySelector('.qspot');if(n)n.style.animation='none';},{passive:true});}});
+  window.addEventListener('resize',draw);
+}
 function qOrder(){const g=[].concat(...(study.guide||[]).map(x=>[].concat(x.q||[])));const rest=study.questions.filter(x=>!g.includes(x.id)).map(x=>x.id);return g.concat(rest).filter(id=>study.questions.some(x=>x.id===id));}
 function qProg(id){const o=qOrder();const k=Math.max(0,o.indexOf(id))+1;return `<div class="bar"><i style="width:${k/o.length*100}%"></i></div><span class="n">질문 ${k}/${o.length}</span>`;}
 function pGuide(){
@@ -649,7 +657,7 @@ function pGuide(){
   const fr=$('#gframe'),sc=$('#scr');
   const fit=()=>{const s=scr(v,st.cur);const W=fr.parentElement.clientWidth;const k=Math.min(1,W/s.w);fr.style.width=Math.floor(s.w*k)+'px';fr.style.height=Math.floor(s.h*k)+'px';scaleHs(fr);};
   fit();requestAnimationFrame(fit);window.onresize=fit;
-  const bindList=()=>{const ly=sc.querySelector('.top');if(ly&&q&&st.reached&&q.highlight)[].concat(q.highlight).forEach(id=>ly.querySelectorAll('[data-hs="'+id+'"]').forEach(el=>el.classList.add('qhl')));const L=ly&&ly.querySelector('.sc-list');if(L){if(q&&st.reached)presetScroll(L,q.scroll,v.id);L.style.scrollBehavior='smooth';syncArrows(L);L.addEventListener('scroll',()=>syncArrows(L),{passive:true});}};
+  const bindList=()=>{const ly=sc.querySelector('.top');if(ly&&q&&st.reached&&q.highlight)spotlight(fr,[].concat(q.highlight).flatMap(id=>[...ly.querySelectorAll('[data-hs="'+id+'"]')]));const L=ly&&ly.querySelector('.sc-list');if(L){if(q&&st.reached)presetScroll(L,q.scroll,v.id);L.style.scrollBehavior='smooth';syncArrows(L);L.addEventListener('scroll',()=>syncArrows(L),{passive:true});}};
   bindList();initLottie(sc);
   fr.addEventListener('click',e=>{
     const ly=sc.querySelector('.top');const el=e.target.closest('[data-hs]');if(!el||!ly||!ly.contains(el))return;
